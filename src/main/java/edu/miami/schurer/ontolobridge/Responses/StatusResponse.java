@@ -1,4 +1,4 @@
-package edu.miami.schurer.ontologbridge.Responses;
+package edu.miami.schurer.ontolobridge.Responses;
 
 
 import io.swagger.annotations.ApiModel;

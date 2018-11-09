@@ -1,12 +1,12 @@
-package edu.miami.schurer.ontologbridge;
+package edu.miami.schurer.ontolobridge;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class OntologbridgeApplication {
+public class OntolobridgeApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(OntologbridgeApplication.class, args);
+        SpringApplication.run(OntolobridgeApplication.class, args);
     }
 }

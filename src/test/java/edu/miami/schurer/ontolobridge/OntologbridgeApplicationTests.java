@@ -1,4 +1,4 @@
-package edu.miami.schurer.ontologbridge;
+package edu.miami.schurer.ontolobridge;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

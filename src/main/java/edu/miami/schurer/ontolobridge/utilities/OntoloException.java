@@ -1,4 +1,4 @@
-package edu.miami.schurer.ontologbridge.utilities;
+package edu.miami.schurer.ontolobridge.utilities;
 
 public class OntoloException extends Exception {
 

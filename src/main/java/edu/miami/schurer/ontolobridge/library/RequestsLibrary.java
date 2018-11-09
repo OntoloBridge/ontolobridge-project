@@ -1,20 +1,15 @@
-package edu.miami.schurer.ontologbridge.library;
+package edu.miami.schurer.ontolobridge.library;
 
-import edu.miami.schurer.ontologbridge.Responses.OperationResponse;
-import edu.miami.schurer.ontologbridge.Responses.StatusResponse;
-import edu.miami.schurer.ontologbridge.utilities.OntoloException;
-import io.swagger.annotations.ApiModelProperty;
+import edu.miami.schurer.ontolobridge.Responses.OperationResponse;
+import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
-import javax.validation.constraints.Null;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class RequestsLibrary {
 

@@ -1,11 +1,11 @@
-package edu.miami.schurer.ontologbridge;
+package edu.miami.schurer.ontolobridge;
 
-import edu.miami.schurer.ontologbridge.Responses.ExceptionResponse;
-import edu.miami.schurer.ontologbridge.Responses.OperationResponse;
-import edu.miami.schurer.ontologbridge.Responses.RequestResponse;
-import edu.miami.schurer.ontologbridge.Responses.StatusResponse;
+import edu.miami.schurer.ontolobridge.Responses.ExceptionResponse;
+import edu.miami.schurer.ontolobridge.Responses.OperationResponse;
+import edu.miami.schurer.ontolobridge.Responses.RequestResponse;
+import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
 import io.swagger.annotations.ApiParam;
-import edu.miami.schurer.ontologbridge.library.RequestsLibrary;
+import edu.miami.schurer.ontolobridge.library.RequestsLibrary;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,10 +15,42 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/REST")
 public class RequestController extends BaseController {
 
+    String tableTriggerSql = "CREATE OR REPLACE FUNCTION update_modified_column()   \n" +
+            "RETURNS TRIGGER AS $$\n" +
+            "BEGIN\n" +
+            "    NEW.modified = now();\n" +
+            "    RETURN NEW;   \n" +
+            "END;\n" +
+            "$$ language 'plpgsql';";
+    String tableEnumSql ="CREATE TYPE status AS ENUM ('submitted', 'accepted', 'requires-response','rejected');";
+    String tableSql ="CREATE TABLE \"public\".\"requests\" (\n" +
+         "\"id\" serial2 NOT NULL,\n" +
+         "\"label\" varchar(255),\n" +
+         "\"description\" text,\n" +
+         "\"superclass_ontology\" varchar(8),\n" +
+         "\"superclass_id\" int4,\n" +
+         "\"references\" text,\n" +
+         "\"justification\" text,\n" +
+         "\"submitter\" varchar(255),\n" +
+         "\"uri_ontology\" varchar(8),\n" +
+         "\"uri_identifier\" varchar(255),\n" +
+         "\"current_message\" text,\n" +
+         "\"date\" timestamp DEFAULT CURRENT_TIMESTAMP,\n" +
+         "\"last_updated\" timestamp DEFAULT CURRENT_TIMESTAMP,\n" +
+         "\"status\" status DEFAULT \"submitted\","+
+         "PRIMARY KEY (\"id\")\n" +
+         ")\n" +
+         "WITH (OIDS=FALSE)\n" +
+         ";";
+    String tableTrigger2Sql ="\n" +
+         "CREATE TRIGGER \"last_updated\" BEFORE INSERT OR UPDATE OF \"last_updated\" ON \"public\".\"requests\"\n" +
+         "FOR EACH ROW\n" +
+         "EXECUTE PROCEDURE \"public\".\"update_modified_column\"();\n";
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successful requests",response = RequestResponse.class),
             @ApiResponse(code = 500, message = "Internal server error", response = ExceptionResponse.class)
