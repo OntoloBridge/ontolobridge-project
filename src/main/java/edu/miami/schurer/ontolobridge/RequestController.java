@@ -64,8 +64,7 @@ public class RequestController extends BaseController {
                               @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
                               @ApiParam(value = "Name of the submitter if provided") @RequestParam(value="submitter",defaultValue = "") String submitter,
                               @ApiParam(value = "Email of the submitter") @RequestParam(value="email",defaultValue = "") String submitter_email,
-                              @ApiParam(value = "Should submitter be notified of changes ") @RequestParam(value="notify",defaultValue = "false") boolean notify,
-                              @ApiParam(value = "What type of Requests is this") @RequestParam(value="request_type",defaultValue = "term") String type) {
+                              @ApiParam(value = "Should submitter be notified of changes ") @RequestParam(value="notify",defaultValue = "false") boolean notify) {
 
         Integer id = RequestsLibrary.RequestsTerm(JDBCTemplate, label,
                 description,
@@ -75,19 +74,92 @@ public class RequestController extends BaseController {
                 submitter,
                 submitter_email,
                 notify,
-                type);
+                "term");
         return new RequestResponse(id,
                 "http://dev3.ccs.miami.edu:8080/ontolobridge/ONTB_"+String.format("%9d",id).replace(' ','0'),
                 "ONTB_"+String.format("%9d",id).replace(' ','0'));
     }
+
+    @RequestMapping(path="/RequestDataProperty", method= RequestMethod.POST)
+    public Object requestDataProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
+                              @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
+                              @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclasss") String superclass_uri,
+                              @ApiParam(value = "Any references for this requests") @RequestParam(value="references",defaultValue = "") String references,
+                              @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
+                              @ApiParam(value = "Name of the submitter if provided") @RequestParam(value="submitter",defaultValue = "") String submitter,
+                              @ApiParam(value = "Email of the submitter") @RequestParam(value="email",defaultValue = "") String submitter_email,
+                              @ApiParam(value = "Should submitter be notified of changes ") @RequestParam(value="notify",defaultValue = "false") boolean notify) {
+
+        Integer id = RequestsLibrary.RequestsTerm(JDBCTemplate, label,
+                description,
+                superclass_uri,
+                references,
+                justification,
+                submitter,
+                submitter_email,
+                notify,
+                "Data");
+        return new RequestResponse(id,
+                "http://dev3.ccs.miami.edu:8080/ontolobridge/ONTB_"+String.format("%9d",id).replace(' ','0'),
+                "ONTB_"+String.format("%9d",id).replace(' ','0'));
+    }
+
+    @RequestMapping(path="/RequestObjectProperty", method= RequestMethod.POST)
+    public Object requestObjectProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
+                                      @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
+                                      @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclasss") String superclass_uri,
+                                      @ApiParam(value = "Any references for this requests") @RequestParam(value="references",defaultValue = "") String references,
+                                      @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
+                                      @ApiParam(value = "Name of the submitter if provided") @RequestParam(value="submitter",defaultValue = "") String submitter,
+                                      @ApiParam(value = "Email of the submitter") @RequestParam(value="email",defaultValue = "") String submitter_email,
+                                      @ApiParam(value = "Should submitter be notified of changes ") @RequestParam(value="notify",defaultValue = "false") boolean notify) {
+
+        Integer id = RequestsLibrary.RequestsTerm(JDBCTemplate, label,
+                description,
+                superclass_uri,
+                references,
+                justification,
+                submitter,
+                submitter_email,
+                notify,
+                "Object");
+        return new RequestResponse(id,
+                "http://dev3.ccs.miami.edu:8080/ontolobridge/ONTB_"+String.format("%9d",id).replace(' ','0'),
+                "ONTB_"+String.format("%9d",id).replace(' ','0'));
+    }
+
+    @RequestMapping(path="/RequestAnnotationProperty", method= RequestMethod.POST)
+    public Object requestAnnotationProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
+                                        @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
+                                        @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclasss") String superclass_uri,
+                                        @ApiParam(value = "Any references for this requests") @RequestParam(value="references",defaultValue = "") String references,
+                                        @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
+                                        @ApiParam(value = "Name of the submitter if provided") @RequestParam(value="submitter",defaultValue = "") String submitter,
+                                        @ApiParam(value = "Email of the submitter") @RequestParam(value="email",defaultValue = "") String submitter_email,
+                                        @ApiParam(value = "Should submitter be notified of changes ") @RequestParam(value="notify",defaultValue = "false") boolean notify) {
+
+        Integer id = RequestsLibrary.RequestsTerm(JDBCTemplate, label,
+                description,
+                superclass_uri,
+                references,
+                justification,
+                submitter,
+                submitter_email,
+                notify,
+                "Annotation");
+        return new RequestResponse(id,
+                "http://dev3.ccs.miami.edu:8080/ontolobridge/ONTB_"+String.format("%9d",id).replace(' ','0'),
+                "ONTB_"+String.format("%9d",id).replace(' ','0'));
+    }
+
 
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successful requests",response = StatusResponse.class),
             @ApiResponse(code = 500, message = "Internal server error", response = ExceptionResponse.class)
     }
     )
-    @RequestMapping(path="/TermStatus", method= RequestMethod.GET)
-    public Object termStatus(@ApiParam(value = "ID of term") @RequestParam(value="id",defaultValue = "0") Integer id){
+    @RequestMapping(path="/RequestStatus", method= RequestMethod.GET)
+    public Object termStatus(@ApiParam(value = "ID of requests") @RequestParam(value="requestID",defaultValue = "0") Integer id){
         List<StatusResponse> result = RequestsLibrary.TermStatus(JDBCTemplate, id);
         if(result.size() == 1)
             return result.get(0);
@@ -100,8 +172,8 @@ public class RequestController extends BaseController {
             @ApiResponse(code = 500, message = "Internal server error", response = ExceptionResponse.class)
     }
     )
-    @RequestMapping(path="/TermSetStatus", method= RequestMethod.POST)
-    public Object termStatus(@ApiParam(value = "ID of term" ,required = true) @RequestParam(value="id") Integer id,
+    @RequestMapping(path="/RequestsSetStatus", method= RequestMethod.POST)
+    public Object termStatus(@ApiParam(value = "ID of Requests" ,required = true) @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
         return RequestsLibrary.TermStatus(JDBCTemplate, id);
@@ -113,8 +185,8 @@ public class RequestController extends BaseController {
             @ApiResponse(code = 500, message = "Internal server error", response = ExceptionResponse.class)
     }
     )
-    @RequestMapping(path="/UpdateTerm", method= RequestMethod.POST)
-    public Object updateTerm(@ApiParam(value = "ID of term" ,required = true) @RequestParam(value="id") Integer id,
+    @RequestMapping(path="/UpdateRequests", method= RequestMethod.POST)
+    public Object updateTerm(@ApiParam(value = "ID of requests" ,required = true) @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
         return RequestsLibrary.TermStatus(JDBCTemplate, id);

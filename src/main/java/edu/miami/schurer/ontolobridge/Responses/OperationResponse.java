@@ -13,12 +13,12 @@ public class OperationResponse {
     @ApiModelProperty( required = true, example = "true")
     public boolean success;
 
-    @ApiModelProperty( required = true, example = "ONTB_00025")
-    public String requestsID;
+    @ApiModelProperty( required = true, example = "25")
+    public int requests_id;
 
-    public OperationResponse(String status, boolean success, String requestsID) {
+    public OperationResponse(String status, boolean success, int requestsID) {
         this.status = status;
         this.success = success;
-        this.requestsID = requestsID;
+        this.requests_id = requestsID;
     }
 }

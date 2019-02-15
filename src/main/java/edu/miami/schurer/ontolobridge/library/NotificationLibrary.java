@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RequestsLibrary {
+public class NotificationLibrary {
 
     static public int RequestsTerm(NamedParameterJdbcTemplate jdbcTemplate,
                                        String label,
