@@ -8,6 +8,7 @@ import io.swagger.annotations.ApiParam;
 import edu.miami.schurer.ontolobridge.library.RequestsLibrary;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -19,6 +20,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/REST")
 public class RequestController extends BaseController {
+
+    @Autowired
+    public NotifierService notifier;
 
     String tableTriggerSql = "CREATE OR REPLACE FUNCTION update_modified_column()   \n" +
             "RETURNS TRIGGER AS $$\n" +
@@ -75,6 +79,11 @@ public class RequestController extends BaseController {
                 submitter_email,
                 notify,
                 "term");
+        if(submitter_email != null){
+            notifier.sendEmailNotification(submitter_email,"Received Term Request","Hello "+submitter+"\n\n We have received your request for "+label+" and appropriate maintainers notified");
+        }
+
+
         return new RequestResponse(id,
                 "http://dev3.ccs.miami.edu:8080/ontolobridge/ONTB_"+String.format("%9d",id).replace(' ','0'),
                 "ONTB_"+String.format("%9d",id).replace(' ','0'));

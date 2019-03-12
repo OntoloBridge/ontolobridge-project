@@ -1,7 +1,9 @@
 package edu.miami.schurer.ontolobridge.library;
 
+import edu.miami.schurer.ontolobridge.NotifierService;
 import edu.miami.schurer.ontolobridge.Responses.OperationResponse;
 import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;

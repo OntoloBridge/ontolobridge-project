@@ -1,56 +1,80 @@
 package edu.miami.schurer.ontolobridge;
 
-import edu.miami.schurer.ontolobridge.utilities.EmailProperties;
+import com.google.common.collect.Lists;
+import edu.miami.schurer.ontolobridge.Responses.NotificationObject;
+import it.ozimov.springboot.mail.model.Email;
+import it.ozimov.springboot.mail.model.defaultimpl.DefaultEmail;
+import it.ozimov.springboot.mail.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.Properties;
-
-
-import com.sun.mail.smtp.*;
-
-import javax.mail.*;
 import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
+import java.util.HashMap;
+import java.util.List;
 
-@Component
-public class NotifierService {
-
-    private EmailProperties emailProperties;
-
+@Service
+public class NotifierService{
 
     @Autowired
-    public NotifierService(EmailProperties emailProperties) {
-        emailProperties = emailProperties;
-    }
+    public EmailService emailService;
 
-    @Scheduled(cron="0 */5 * * * ?")
-    public void checkNewNotifications()
+    //we want to know where we are sending from
+    @Value("${spring.mail.username}")
+    private String emailHost;
+
+    //Named template to allow insertion of array into query in SigCSmallMoleculeLibrary
+    @Autowired
+    protected JdbcTemplate JDBCTemplate;
+
+    @Autowired
+    public NotifierService(){}
+
+    @Scheduled(cron="0 */1 * * * ?")
+    public void checkNewRequests()
     {
-        System.out.println("Method executed at every 5 minutes. Current time is :: "+ new Date());
+        String sql = "select * from notifications where sent = 0 limit 20";
+        List<NotificationObject> notifications = JDBCTemplate.query(sql,
+                (rs, rowNum) -> new NotificationObject(
+                        rs.getInt("id"),
+                        rs.getString("type"),
+                        rs.getString("title"),
+                        rs.getBoolean("sent"),
+                        rs.getString("address"),
+                        rs.getString("message"),
+                        rs.getDate("createDate"),
+                        rs.getDate("sentDate")));
+        for (NotificationObject n: notifications) {
+            if(n.getType().equals("email")){
+                Object[] args = {n.getId()};
+                if(sendEmailNotification(n.getAddress(), n.getTitle(), n.getMessage()))
+                    System.out.println("Sending email to "+n.getAddress());
+                    JDBCTemplate.update("UPDATE notifications SET sent = 1,\"sentDate\" = current_date WHERE id = ?",args);
+            }
+        }
     }
 
-    public void sendEmailNotification(String email, String subject, String message) throws Exception{
-        Properties props = System.getProperties();
-        props.put("mail.smtps.host",emailProperties.getHost());
-        props.put("mail.smtps.auth","true");
-        Session session = Session.getInstance(props, null);
-        javax.mail.Message msg = new MimeMessage(session);
-        msg.setFrom(new InternetAddress(emailProperties.getUsername()));;
-        msg.setRecipients(javax.mail.Message.RecipientType.TO,
-                InternetAddress.parse(email, false));
-        msg.setSubject(subject);
-        msg.setText(message);
-        msg.setHeader("X-Mailer", "ontolobridge");
-        msg.setSentDate(new Date());
-        SMTPTransport t =
-                (SMTPTransport)session.getTransport("smtps");
-        t.connect(emailProperties.getHost(), emailProperties.getUsername(), emailProperties.getPassword());
-        t.sendMessage(msg, msg.getAllRecipients());
-        System.out.println("Response: " + t.getLastServerResponse());
-        t.close();
+    @SuppressWarnings("ThrowablePrintedToSystemOut")
+    public boolean sendEmailNotification(String email, String subject, String message){
+        HashMap<String,String> headers = new HashMap<>();
+        headers.put("X-Mailer","Ontolobridge Mailer"); //let people know what sent this message
+        try {
+            final Email emailObject = DefaultEmail.builder()
+                    .from(new InternetAddress(emailHost, "Ontolobridge"))
+                    .to(Lists.newArrayList(new InternetAddress(email)))
+                    .subject(subject)
+                    .body(message)
+                    .customHeaders(headers)
+                    .encoding("UTF-8").build();
+            emailService.send(emailObject);
+        } catch(Exception e){
+            System.out.println("Emailer Exception:");
+            System.out.println(e);
+            return false;
+        }
+        return true;
     }
     public void sendGithubNotification(String repo, String title, String Message){
 
