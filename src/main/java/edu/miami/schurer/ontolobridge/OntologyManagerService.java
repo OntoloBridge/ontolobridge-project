@@ -39,8 +39,11 @@ public class OntologyManagerService {
     @Scheduled(cron="0 */1 * * * ?")
     public void checkNewNotifications()
     {
+        //SQL statement to get the relevent information of id of request, assumed ontology and type of request but only if no ontology has been assigned
         String sql = "select id,superclass_ontology,type from requests where uri_ontology is NULL";
-        List<HashMap<String,Object>> notifications = JDBCTemplate.query(sql,
+
+        //retrieve results and store in simple hashmap
+        List<HashMap<String,Object>> unassignedRequests = JDBCTemplate.query(sql,
                 (rs, rowNum) -> {
             HashMap<String,Object> h = new HashMap<>();
             h.put("id",rs.getInt(1));
@@ -48,7 +51,11 @@ public class OntologyManagerService {
             h.put("type",rs.getString(3));
             return h;
         });
-        for(HashMap<String,Object> E: notifications){
+
+        //loop through hashmap of unassigned requests
+        for(HashMap<String,Object> E: unassignedRequests){
+
+            // for each request attempt to find maintainers and ontology by the short term field
             String sql1 = "select o.\"name\" as ontology_name," +
                     "o.ontology_short," +
                     "m.\"name\" as maintainer_name," +
@@ -59,23 +66,23 @@ public class OntologyManagerService {
                     "inner join maintainers m on om.maintainer_id = m.id " +
                     "where o.ontology_short = ?";
 
+            //add the assumed superclass from the requests to parameters, will later be used to set the ontology of the requests
             List<Object> args = new ArrayList<>();
             if(E.get("superclass") != null){
                 args.add(E.get("superclass").toString().toUpperCase());
             }else{
                 args.add("");
             }
+
+            //attempt to get the list of maintainers
             List<MaintainersObject> maintainers = JDBCTemplate.query(sql1,args.toArray(),
                     (rs, rowNum) -> new MaintainersObject(rs));
+
+            //For the next part of assigning an onology assign the ID of the requests to parameters
             args.add(E.get("id"));
-            if(maintainers.size() > 0) {
-                String updateSQL = "update requests set uri_ontology = ? where id = ?";
-                System.out.println("Setting term "+E.get("id")+" to "+args.get(0));
-                JDBCTemplate.update(updateSQL,args.toArray());
-                for (MaintainersObject m : maintainers) {
-                    NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new " + E.get("type") + " has been submitted", "New " + E.get("type") + " Requests");
-                }
-            }else{
+
+            //if we get maintainers notify them, otherwise assume we have no idea who this belongs to and notify the sys admins
+            if(maintainers.size() == 0) {
                 sql1 = "select o.\"name\" as ontology_name," +
                         "o.ontology_short," +
                         "m.\"name\" as maintainer_name," +
@@ -89,12 +96,16 @@ public class OntologyManagerService {
                 maintainers = JDBCTemplate.query(sql1,
                         (rs, rowNum) -> new MaintainersObject(rs));
                 args.set(0,"???");
-                String updateSQL = "update requests set uri_ontology = ? where id = ?";
-                System.out.println("Setting term "+E.get("id")+" to "+args.get(0));
-                JDBCTemplate.update(updateSQL,args.toArray());
-                for (MaintainersObject m : maintainers) {
-                    NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new " + E.get("type") + " has been submitted without any known ontology", "New " + E.get("type") + " Requests");
-                }
+            }
+
+            //update the requests to the approriate ontology
+            String updateSQL = "update requests set uri_ontology = ? where id = ?";
+            JDBCTemplate.update(updateSQL,args.toArray());
+            System.out.println("Setting term "+E.get("id")+" to "+args.get(0));
+
+            //queue notifications
+            for (MaintainersObject m : maintainers) {
+                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new " + E.get("type") + " has been submitted", "New " + E.get("type") + " Requests");
             }
         }
     }

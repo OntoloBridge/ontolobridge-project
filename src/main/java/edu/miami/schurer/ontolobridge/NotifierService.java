@@ -35,6 +35,7 @@ public class NotifierService{
     @Scheduled(cron="0 */1 * * * ?")
     public void checkNewRequests()
     {
+        //get the mext 20 notifications not sent
         String sql = "select * from notifications where sent = 0 limit 20";
         List<NotificationObject> notifications = JDBCTemplate.query(sql,
                 (rs, rowNum) -> new NotificationObject(
@@ -46,6 +47,8 @@ public class NotifierService{
                         rs.getString("message"),
                         rs.getDate("createDate"),
                         rs.getDate("sentDate")));
+
+        //for each notification attempt to send the notification
         for (NotificationObject n: notifications) {
             if(n.getType().equals("email")){
                 Object[] args = {n.getId()};
