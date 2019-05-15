@@ -1,6 +1,7 @@
 package edu.miami.schurer.ontolobridge.library;
 
 import edu.miami.schurer.ontolobridge.NotifierService;
+import edu.miami.schurer.ontolobridge.Responses.DebugStatusResponse;
 import edu.miami.schurer.ontolobridge.Responses.OperationResponse;
 import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class RequestsLibrary {
                                        String submitter_email,
                                        boolean notify,
                                        String type){
-        return RequestsTerm(jdbcTemplate.getJdbcTemplate(),label,description,superclass_uri,references,justification,submitter,submitter_email,notify,type);
+        return RequestsTerm(jdbcTemplate.getJdbcTemplate(),label,description,superclass_uri,references,justification,submitter,submitter_email,notify,"",type);
     }
     static public int RequestsTerm(JdbcTemplate jdbcTemplate,
                                     String label,
@@ -38,6 +39,7 @@ public class RequestsLibrary {
                                     String submitter,
                                     String submitter_email,
                                     boolean notify,
+                                    String ontology,
                                     String type){
         String sql = "INSERT INTO requests (" +
                 "\"label\"," +
@@ -50,9 +52,10 @@ public class RequestsLibrary {
                 "\"submitter\"," +
                 "\"submitter_email\"," +
                 "\"notify\"," +
-                "\"type\"" +
+                "\"type\"," +
+                "\"uri_ontology\"" +
                 ")VALUES("+
-                "?,?,?,?,?,?,?,?,?,?,?) RETURNING id;";
+                "?,?,?,?,?,?,?,?,?,?,?,?) RETURNING id;";
         List<Object> args = new ArrayList<>();
         args.add(label);
         args.add(description);
@@ -84,38 +87,59 @@ public class RequestsLibrary {
         args.add(submitter_email);
         args.add(notify?1:0);
         args.add(type);
+        args.add(ontology.isEmpty()?"":ontology);
         Integer id = jdbcTemplate.queryForObject(sql,args.toArray(),Integer.class);
 
         jdbcTemplate.execute("insert into \"requestsStatus\" (\"requestID\",\"status\") VALUES("+id+",'submitted')");
         return id;
     }
 
-    static public List<StatusResponse> TermStatus(JdbcTemplate jdbcTemplate, Integer id){
-        String sql = "select id,status,uri_ontology,uri_identifier,current_message,last_updated,type from requests";
+    static public List<StatusResponse> TermStatus(JdbcTemplate jdbcTemplate, Integer id,String include){
+        String sql ="";
+        //For deubgging
+        if(include.equals("all"))
+            sql = "select * from requests";
+        else
+            sql = "select id,status,uri_ontology,uri_identifier,current_message,last_updated,type from requests";
         List<Object> args = new ArrayList<>();
         if(id> 0 ){
             sql+=" where id = ?";
             args.add(id);
         }
-        jdbcTemplate.query(sql,
-                args.toArray(),
-                new RowMapper<StatusResponse>() {
-                    public StatusResponse mapRow(ResultSet rs, int rowNum) throws SQLException {
-                        String uri = "";
-                        String curie = "";
+        if(include.equals("all"))
+            return jdbcTemplate.query(sql,
+                    args.toArray(),
+                    (rs, rowNum) -> {
+                        String curie = "ONTB_"+id;
+                        String uri = "http://ontolobridge.org/"+curie;
+                        return new DebugStatusResponse(
+                                rs.getString("status"),
+                                id,
+                                uri,
+                                curie,
+                                rs.getString("current_message"),
+                                "",
+                                "",
+                                rs.getString("type"),
+                                rs.getTimestamp("last_updated").getTime(),
+                                rs.getDate("last_updated").toString(),
+                                rs.getString("label"),
+                                rs.getString("description"),
+                                rs.getString("superclass_ontology"),
+                                rs.getString("superclass_id"),
+                                rs.getString("references"),
+                                rs.getString("justification"),
+                                rs.getString("submitter"),
+                                rs.getInt("notify"));
+                    });
+        else
+            return jdbcTemplate.query(sql,
+                    args.toArray(),
+                    (rs, rowNum) -> {
+                        String curie = "ONTB_"+id;
+                        String uri = "http://ontolobridge.org/"+curie;
                         return new StatusResponse(rs.getString("status"),id,uri,curie,rs.getString("current_message"),"","",rs.getString("type"),rs.getTimestamp("last_updated").getTime(),rs.getDate("last_updated").toString());
-                    }
-                });
-        return jdbcTemplate.query(sql,
-                args.toArray(),
-                new RowMapper<StatusResponse>() {
-                    public StatusResponse mapRow(ResultSet rs, int rowNum) throws SQLException {
-                        String uri = "";
-                        String curie = "";
-                        return new StatusResponse(rs.getString("status"),id,uri,curie,rs.getString("current_message"),"","",rs.getString("type"),rs.getTimestamp("last_updated").getTime(),rs.getDate("last_updated").toString());
-                    }
-                });
-
+                    });
     }
     static public OperationResponse TermUpdateStatus(JdbcTemplate jdbcTemplate, Integer id, String status,String message){
         String sql = "UPDATE requests  SET  status = ?::status, current_message = ? WHERE id = ?";

@@ -92,5 +92,26 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>development</id>
+            <properties>
+                <activatedProperties>dev</activatedProperties>
+            </properties>
+            <build>
+                <finalName>ontolobridge-test</finalName>
+            </build>
+        </profile>
+        <profile>
+            <id>production</id>
+            <properties>
+                <activatedProperties>prod</activatedProperties>
+            </properties>
+            <build>
+                <finalName>ontolobridge</finalName>
+            </build>
+        </profile>
+    </profiles>
+
 
 </project>

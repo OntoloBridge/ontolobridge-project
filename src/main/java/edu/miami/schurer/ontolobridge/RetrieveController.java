@@ -1,11 +1,7 @@
 package edu.miami.schurer.ontolobridge;
 
-import com.sun.deploy.net.HttpResponse;
 import edu.miami.schurer.ontolobridge.Responses.ExceptionResponse;
-import edu.miami.schurer.ontolobridge.Responses.OperationResponse;
 import edu.miami.schurer.ontolobridge.Responses.RequestResponse;
-import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
-import edu.miami.schurer.ontolobridge.library.RequestsLibrary;
 import edu.miami.schurer.ontolobridge.utilities.OntoloException;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;

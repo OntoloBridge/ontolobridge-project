@@ -36,11 +36,37 @@ public class OntologyManagerService {
     @Autowired
     public OntologyManagerService(){}
 
+    public List<MaintainersObject> GetMaintainers(String superclass){
+        // for each request attempt to find maintainers and ontology by the short term field
+        String sql1 = "select o.\"name\" as ontology_name," +
+                "o.ontology_short," +
+                "m.\"name\" as maintainer_name," +
+                "m.contact_location," +
+                "m.contact_method " +
+                "from ontologies o " +
+                "inner join ontology_to_maintainer om on o.id = om.ontology_id " +
+                "inner join maintainers m on om.maintainer_id = m.id " +
+                "where o.ontology_short = ?";
+
+        //add the assumed superclass from the requests to parameters, will later be used to set the ontology of the requests
+        List<Object> args = new ArrayList<>();
+        if(superclass != null && !superclass.isEmpty()){
+            args.add(superclass.toUpperCase());
+        }else{
+            return new ArrayList<MaintainersObject>();
+        }
+
+        //attempt to get the list of maintainers
+        List<MaintainersObject> maintainers = JDBCTemplate.query(sql1,args.toArray(),
+                (rs, rowNum) -> new MaintainersObject(rs));
+        return maintainers;
+    }
+
     @Scheduled(cron="0 */1 * * * ?")
     public void checkNewNotifications()
     {
         //SQL statement to get the relevent information of id of request, assumed ontology and type of request but only if no ontology has been assigned
-        String sql = "select id,superclass_ontology,type from requests where uri_ontology is NULL";
+        String sql = "select id,superclass_ontology,type from requests where (uri_ontology = '') IS NOT FALSE";
 
         //retrieve results and store in simple hashmap
         List<HashMap<String,Object>> unassignedRequests = JDBCTemplate.query(sql,
@@ -68,15 +94,10 @@ public class OntologyManagerService {
 
             //add the assumed superclass from the requests to parameters, will later be used to set the ontology of the requests
             List<Object> args = new ArrayList<>();
-            if(E.get("superclass") != null){
-                args.add(E.get("superclass").toString().toUpperCase());
-            }else{
-                args.add("");
-            }
 
+            args.add(E.get("superclass").toString().toUpperCase());
             //attempt to get the list of maintainers
-            List<MaintainersObject> maintainers = JDBCTemplate.query(sql1,args.toArray(),
-                    (rs, rowNum) -> new MaintainersObject(rs));
+            List<MaintainersObject> maintainers = GetMaintainers(E.get("superclass").toString().toUpperCase());
 
             //For the next part of assigning an onology assign the ID of the requests to parameters
             args.add(E.get("id"));
@@ -93,8 +114,7 @@ public class OntologyManagerService {
                         "inner join maintainers m on om.maintainer_id = m.id " +
                         "where o.id = 0";
 
-                maintainers = JDBCTemplate.query(sql1,
-                        (rs, rowNum) -> new MaintainersObject(rs));
+                maintainers = GetMaintainers("???");
                 args.set(0,"???");
             }
 

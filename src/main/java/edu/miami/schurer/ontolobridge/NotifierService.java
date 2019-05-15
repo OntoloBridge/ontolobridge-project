@@ -50,7 +50,7 @@ public class NotifierService{
 
         //for each notification attempt to send the notification
         for (NotificationObject n: notifications) {
-            if(n.getType().equals("email")){
+            if(n.getType().equals("email") && emailHost != null && !emailHost.isEmpty()){
                 Object[] args = {n.getId()};
                 if(sendEmailNotification(n.getAddress(), n.getTitle(), n.getMessage()))
                     System.out.println("Sending email to "+n.getAddress());

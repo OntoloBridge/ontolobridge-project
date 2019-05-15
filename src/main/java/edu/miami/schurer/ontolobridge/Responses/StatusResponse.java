@@ -37,6 +37,10 @@ public class StatusResponse {
     @ApiModelProperty( required = false, example = "Term")
     public String type;
 
+    public StatusResponse(){
+
+    }
+
     public StatusResponse(String status,int request_id, String provisional_uri, String provisional_curie, String message, String uri, String curie,String type, long timestamp,String datetime) {
         this.status = status;
         this.request_id = request_id;
