@@ -1,5 +1,6 @@
 package edu.miami.schurer.ontolobridge;
 
+import com.opencsv.CSVWriter;
 import edu.miami.schurer.ontolobridge.Responses.ExceptionResponse;
 import edu.miami.schurer.ontolobridge.Responses.RequestResponse;
 import edu.miami.schurer.ontolobridge.utilities.OntoloException;
@@ -14,15 +15,14 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.Null;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 
 @RestController
@@ -48,7 +48,7 @@ public class RetrieveController extends BaseController {
         args.add(ontology);
 
         HashMap<String,Object> termMap = new HashMap<>();
-        ArrayList<String> keys = new ArrayList<>();
+        Set<String> keys = new LinkedHashSet<>();
         JDBCTemplate.query(sql,
                 args.toArray(),
                 new RowMapper<Object>() {
@@ -107,20 +107,20 @@ public class RetrieveController extends BaseController {
                 throw new OntoloException("Too many iterations");
             }
         }
+        StringWriter s = new StringWriter();
+        CSVWriter writer = new CSVWriter(s);
+        String[] Keys =  ((HashMap<String,Object>)outList.get(0)).keySet().toArray(new String[((HashMap)outList.get(0)).size()]);
+        writer.writeNext(Keys);
         for(Object o: outList){
             HashMap<String,String> array =(HashMap)o;
-            if(csv.length()==0){
-                for(String s: keys){
-                    csv.append(s);
-                    csv.append(",");
-                }
-                csv.append("\n");
-            }
-            for (String s : keys) {
-                csv.append(array.get(s));
-                csv.append(",");
-            }
-            csv.append("\n");
+            String[] values = new String[array.values().size()];
+            values = array.values().toArray(values);
+            writer.writeNext(values);
+        }
+        try {
+            writer.close();
+        }catch (IOException e){
+            throw new OntoloException("Failed to close");
         }
         DateFormat formatter = new SimpleDateFormat("ddMMyyyy");
 
@@ -128,7 +128,7 @@ public class RetrieveController extends BaseController {
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.add("Content-Type","text/csv");
         responseHeaders.add( "content-disposition", "attachment;filename="+ontology+"-newTerms-"+formatter.format(today)+".csv");
-        respEntity = new ResponseEntity(csv.toString(), responseHeaders, HttpStatus.OK);
+        respEntity = new ResponseEntity(s.toString(), responseHeaders, HttpStatus.OK);
         return respEntity;
     }
 }

@@ -100,25 +100,31 @@ public class RequestsLibrary {
         if(include.equals("all"))
             sql = "select * from requests";
         else
-            sql = "select id,status,uri_ontology,uri_identifier,current_message,last_updated,type from requests";
+            sql = "select id,status,uri_ontology,uri_identifier,current_message,last_updated,type,uri from requests";
         List<Object> args = new ArrayList<>();
         if(id> 0 ){
             sql+=" where id = ?";
             args.add(id);
         }
+
+
         if(include.equals("all"))
             return jdbcTemplate.query(sql,
                     args.toArray(),
                     (rs, rowNum) -> {
                         String curie = "ONTB_"+id;
                         String uri = "http://ontolobridge.org/"+curie;
+                        String newURI = rs.getString("uri");
+                        if(newURI == null){
+                            newURI = "";
+                        }
                         return new DebugStatusResponse(
                                 rs.getString("status"),
                                 id,
                                 uri,
                                 curie,
                                 rs.getString("current_message"),
-                                "",
+                                newURI,
                                 "",
                                 rs.getString("type"),
                                 rs.getTimestamp("last_updated").getTime(),
@@ -136,9 +142,13 @@ public class RequestsLibrary {
             return jdbcTemplate.query(sql,
                     args.toArray(),
                     (rs, rowNum) -> {
+                        String newURI = rs.getString("uri");
+                        if(newURI == null){
+                            newURI = "";
+                        }
                         String curie = "ONTB_"+id;
                         String uri = "http://ontolobridge.org/"+curie;
-                        return new StatusResponse(rs.getString("status"),id,uri,curie,rs.getString("current_message"),"","",rs.getString("type"),rs.getTimestamp("last_updated").getTime(),rs.getDate("last_updated").toString());
+                        return new StatusResponse(rs.getString("status"),id,uri,curie,rs.getString("current_message"),newURI,"",rs.getString("type"),rs.getTimestamp("last_updated").getTime(),rs.getDate("last_updated").toString());
                     });
     }
     static public OperationResponse TermUpdateStatus(JdbcTemplate jdbcTemplate, Integer id, String status,String message){
@@ -155,7 +165,7 @@ public class RequestsLibrary {
         try {
             args = new ArrayList<>();
             args.add(status);
-            jdbcTemplate.update("insert into \"requestsStatus\" (\"requestID\",\"status\") VALUES("+id+",?)",args);
+            jdbcTemplate.update("insert into \"requestsStatus\" (\"requestID\",status) VALUES("+id+",?)",args.toArray());
         }catch(Exception e){
             return new OperationResponse("failure",false,id);
         }

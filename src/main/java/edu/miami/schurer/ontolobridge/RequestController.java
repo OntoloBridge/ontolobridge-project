@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.constraints.NotBlank;
 import java.util.List;
 
 
@@ -66,10 +67,10 @@ public class RequestController extends BaseController {
     }
     )
     @RequestMapping(path="/RequestTerm", method= RequestMethod.POST)
-    public Object requestTerm(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
-                              @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
-                              @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") String superclass_uri,
-                              @ApiParam(value = "Any references for this requests") @RequestParam(value="references",defaultValue = "") String references,
+    public Object requestTerm(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") @NotBlank String label,
+                              @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") @NotBlank String description,
+                              @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") @NotBlank String superclass_uri,
+                              @ApiParam(value = "Any references for this requests") @RequestParam(value="references",defaultValue = "") @NotBlank String references,
                               @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
                               @ApiParam(value = "Name of the submitter if provided") @RequestParam(value="submitter",defaultValue = "") String submitter,
                               @ApiParam(value = "Email of the submitter") @RequestParam(value="email",defaultValue = "") String submitter_email,
@@ -90,7 +91,7 @@ public class RequestController extends BaseController {
             List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
             //queue notifications
             for (MaintainersObject m : maintainers) {
-                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new term has been submitted", "New term Requests");
+                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new term has been submitted", "New term Forms");
             }
         }
 
@@ -116,6 +117,10 @@ public class RequestController extends BaseController {
                               @ApiParam(value = "Ontology Request ") @RequestParam(value="ontology",defaultValue = "") String ontology,
                               @ApiParam(value = "Should submitter be notified of changes ") @RequestParam(value="notify",defaultValue = "false") boolean notify) {
 
+        if(label.length() == 0)
+           return new ExceptionResponse("Label is required");
+        if(description.length() == 0)
+            return new ExceptionResponse("Description is required");
         Integer id = RequestsLibrary.RequestsTerm(JDBCTemplate, label,
                 description,
                 superclass_uri,
@@ -131,7 +136,7 @@ public class RequestController extends BaseController {
             List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
             //queue notifications
             for (MaintainersObject m : maintainers) {
-                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new data property has been submitted", "New data property Requests");
+                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new data property has been submitted", "New data property Forms");
             }
         }
         return new RequestResponse(id,
@@ -165,7 +170,7 @@ public class RequestController extends BaseController {
             List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
             //queue notifications
             for (MaintainersObject m : maintainers) {
-                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new object property has been submitted", "New object property Requests");
+                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new object property has been submitted", "New object property Forms");
             }
         }
 
@@ -200,7 +205,7 @@ public class RequestController extends BaseController {
             List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
             //queue notifications
             for (MaintainersObject m : maintainers) {
-                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new annotation property has been submitted", "New annotation property Requests");
+                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new annotation property has been submitted", "New annotation property Forms");
             }
         }
         return new RequestResponse(id,
@@ -233,10 +238,10 @@ public class RequestController extends BaseController {
     }
     )
     @RequestMapping(path="/RequestsSetStatus", method= RequestMethod.POST)
-    public Object termStatus(@ApiParam(value = "ID of Requests" ,required = true) @RequestParam(value="requestID") Integer id,
+    public Object termStatus(@ApiParam(value = "ID of Forms" ,required = true) @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
-        return RequestsLibrary.TermStatus(JDBCTemplate, id,"");
+        return RequestsLibrary.TermUpdateStatus(JDBCTemplate, id,status,message);
 
     }
 
@@ -249,7 +254,7 @@ public class RequestController extends BaseController {
     public Object updateTerm(@ApiParam(value = "ID of requests" ,required = true) @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
-        return RequestsLibrary.TermStatus(JDBCTemplate, id,"");
+        return RequestsLibrary.TermUpdateStatus(JDBCTemplate, id,status,message);
 
     }
 }

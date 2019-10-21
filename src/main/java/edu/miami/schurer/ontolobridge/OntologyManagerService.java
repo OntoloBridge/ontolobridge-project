@@ -95,6 +95,8 @@ public class OntologyManagerService {
             //add the assumed superclass from the requests to parameters, will later be used to set the ontology of the requests
             List<Object> args = new ArrayList<>();
 
+            if(E.get("superclass") == null)
+                continue;
             args.add(E.get("superclass").toString().toUpperCase());
             //attempt to get the list of maintainers
             List<MaintainersObject> maintainers = GetMaintainers(E.get("superclass").toString().toUpperCase());
@@ -125,7 +127,7 @@ public class OntologyManagerService {
 
             //queue notifications
             for (MaintainersObject m : maintainers) {
-                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new " + E.get("type") + " has been submitted", "New " + E.get("type") + " Requests");
+                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new " + E.get("type") + " has been submitted", "New " + E.get("type") + " Forms");
             }
         }
     }

@@ -12,4 +12,8 @@ public class ExceptionResponse {
 
     @ApiModelProperty( required = true, example = "An Internal Error Has Occured")
     public String message;
+
+    public ExceptionResponse(String message) {
+        this.message = message;
+    }
 }
