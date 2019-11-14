@@ -1,0 +1,18 @@
+Dear __user_name__,
+
+You have submitted a request for a new term with the following details:
+
+Label: __label__
+Description: __description__
+Superclass URI: __superclass_uri__
+References: __references__
+Justification: __justification__
+Type: __type__
+
+Please remember that better described terms have higher rates of acceptance.
+We will notify you again once your term request is being reviewed by the ontology management team for the ontology_name ontology.
+
+You can also view the status of your term request using __statusapi__, or by using  __site__  and your ticket ID: __ticketID__ .
+
+Thank you for your contribution,
+OntoloBridge Team

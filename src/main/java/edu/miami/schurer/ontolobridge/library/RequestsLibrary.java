@@ -16,6 +16,8 @@ import java.util.List;
 
 public class RequestsLibrary {
 
+
+
     static public int RequestsTerm(NamedParameterJdbcTemplate jdbcTemplate,
                                        String label,
                                        String description,
@@ -60,7 +62,7 @@ public class RequestsLibrary {
         args.add(label);
         args.add(description);
         if(superclass_uri.contains("://")){
-            args.add(superclass_uri);
+                args.add(superclass_uri);
             if(superclass_uri.contains("#"))
                 superclass_uri = superclass_uri.substring(superclass_uri.lastIndexOf("#")+1);
             else

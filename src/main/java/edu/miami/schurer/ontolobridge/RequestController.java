@@ -2,18 +2,24 @@ package edu.miami.schurer.ontolobridge;
 
 import edu.miami.schurer.ontolobridge.Responses.*;
 import edu.miami.schurer.ontolobridge.library.NotificationLibrary;
+import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import io.swagger.annotations.ApiParam;
 import edu.miami.schurer.ontolobridge.library.RequestsLibrary;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotBlank;
+import java.awt.image.ImagingOpException;
+import java.io.IOException;
 import java.util.List;
 
 
@@ -29,6 +35,16 @@ public class RequestController extends BaseController {
 
     @Autowired
     public OntologyManagerService Manager;
+
+    @Autowired
+    private AppProperties appProp;
+
+    public NotificationLibrary notLib ;
+
+    @PostConstruct
+    void Init(){
+        notLib = new NotificationLibrary(appProp);
+    }
 
     String tableTriggerSql = "CREATE OR REPLACE FUNCTION update_modified_column()   \n" +
             "RETURNS TRIGGER AS $$\n" +
@@ -86,7 +102,7 @@ public class RequestController extends BaseController {
                 submitter_email,
                 notify,
                 ontology,
-                "term");
+                    "term");
         if(ontology != null && !ontology.isEmpty()){
             List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
             //queue notifications
@@ -97,6 +113,17 @@ public class RequestController extends BaseController {
 
 
         if(submitter_email != null && notify){
+            notLib.InsertEmail(JDBCTemplate,
+                    "/emails/termSubmission.email",
+                    label,
+                    description,
+                    superclass_uri,
+                    references,
+                    justification,
+                    submitter,
+                    submitter_email,
+                    "term",
+                    id.toString());
             notifier.sendEmailNotification(submitter_email,"Received Term Request","Hello "+submitter+"\n\n We have received your request for "+label+" and appropriate maintainers notified");
         }
 

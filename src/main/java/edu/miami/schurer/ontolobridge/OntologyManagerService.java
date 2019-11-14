@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import edu.miami.schurer.ontolobridge.Responses.MaintainersObject;
 import edu.miami.schurer.ontolobridge.Responses.NotificationObject;
 import edu.miami.schurer.ontolobridge.library.NotificationLibrary;
+import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import it.ozimov.springboot.mail.model.Email;
 import it.ozimov.springboot.mail.model.defaultimpl.DefaultEmail;
 import it.ozimov.springboot.mail.service.EmailService;
@@ -13,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import javax.mail.internet.InternetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +27,8 @@ public class OntologyManagerService {
     @Autowired
     public EmailService emailService;
 
+    public NotificationLibrary notLib;
+
     //we want to know where we are sending from
     @Value("${spring.mail.username}")
     private String emailHost;
@@ -34,7 +38,17 @@ public class OntologyManagerService {
     protected JdbcTemplate JDBCTemplate;
 
     @Autowired
-    public OntologyManagerService(){}
+    private AppProperties appProp;
+
+    @Autowired
+    public OntologyManagerService(){
+
+    }
+
+    @PostConstruct
+    void Init(){
+        notLib = new NotificationLibrary(appProp);
+    }
 
     public List<MaintainersObject> GetMaintainers(String superclass){
         // for each request attempt to find maintainers and ontology by the short term field
@@ -66,15 +80,26 @@ public class OntologyManagerService {
     public void checkNewNotifications()
     {
         //SQL statement to get the relevent information of id of request, assumed ontology and type of request but only if no ontology has been assigned
-        String sql = "select id,superclass_ontology,type from requests where (uri_ontology = '') IS NOT FALSE";
+        String sql = "select * from requests where (uri_ontology = '') IS NOT FALSE";
 
         //retrieve results and store in simple hashmap
         List<HashMap<String,Object>> unassignedRequests = JDBCTemplate.query(sql,
                 (rs, rowNum) -> {
             HashMap<String,Object> h = new HashMap<>();
-            h.put("id",rs.getInt(1));
-            h.put("superclass",rs.getString(2));
-            h.put("type",rs.getString(3));
+            h.put("id",rs.getInt("id"));
+            h.put("label",rs.getString("label"));
+            h.put("description",rs.getString("description"));
+            h.put("superclass_ontology",rs.getString("superclass_ontology"));
+            h.put("superclass_id",rs.getInt("superclass_id"));
+            h.put("references",rs.getString("references"));
+            h.put("justification",rs.getString("justification"));
+            h.put("submitter",rs.getString("submitter"));
+            h.put("uri_ontology",rs.getString("uri_ontology"));
+            h.put("uri_identifier",rs.getString("uri_identifier"));
+            h.put("status",rs.getString("status"));
+            h.put("uri",rs.getString("uri"));
+            h.put("superclass_uri",rs.getString("superclass_uri"));
+            h.put("type",rs.getString("type"));
             return h;
         });
 
@@ -94,30 +119,20 @@ public class OntologyManagerService {
 
             //add the assumed superclass from the requests to parameters, will later be used to set the ontology of the requests
             List<Object> args = new ArrayList<>();
+            List<MaintainersObject> maintainers = new ArrayList<>();
 
-            if(E.get("superclass") == null)
-                continue;
-            args.add(E.get("superclass").toString().toUpperCase());
-            //attempt to get the list of maintainers
-            List<MaintainersObject> maintainers = GetMaintainers(E.get("superclass").toString().toUpperCase());
-
-            //For the next part of assigning an onology assign the ID of the requests to parameters
+            //set default values
+            args.add("???");
             args.add(E.get("id"));
 
+            if(E.get("superclass") != null) {
+                args.set(1,E.get("superclass").toString().toUpperCase());
+                //attempt to get the list of maintainers
+                maintainers = GetMaintainers(E.get("superclass").toString().toUpperCase());
+            }
             //if we get maintainers notify them, otherwise assume we have no idea who this belongs to and notify the sys admins
             if(maintainers.size() == 0) {
-                sql1 = "select o.\"name\" as ontology_name," +
-                        "o.ontology_short," +
-                        "m.\"name\" as maintainer_name," +
-                        "m.contact_location," +
-                        "m.contact_method " +
-                        "from ontologies o " +
-                        "inner join ontology_to_maintainer om on o.id = om.ontology_id " +
-                        "inner join maintainers m on om.maintainer_id = m.id " +
-                        "where o.id = 0";
-
                 maintainers = GetMaintainers("???");
-                args.set(0,"???");
             }
 
             //update the requests to the approriate ontology
@@ -127,7 +142,10 @@ public class OntologyManagerService {
 
             //queue notifications
             for (MaintainersObject m : maintainers) {
-                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new " + E.get("type") + " has been submitted", "New " + E.get("type") + " Forms");
+                E.put("submitter_email",m.getContact_location());
+                E.put("submitter","Maintainer");
+                notLib.InsertEmail(JDBCTemplate,"/emails/termSubmission.email",E);
+                //NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new " + E.get("type") + " has been submitted", "New " + E.get("type") + " Forms");
             }
         }
     }
