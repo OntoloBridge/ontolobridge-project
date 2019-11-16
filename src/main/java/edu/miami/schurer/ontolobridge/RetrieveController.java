@@ -42,7 +42,7 @@ public class RetrieveController extends BaseController {
         ResponseEntity respEntity = null;
 
 
-        String sql = "select label,description,uri_ontology,uri_identifier,superclass_uri,superclass_ontology,superclass_id,superclass_id,current_message,type,id from requests where uri_ontology = ? and status != 'rejected'";
+        String sql = "select label,description,uri_ontology,uri_identifier,uri_superclass,superclass_ontology,superclass_id,superclass_id,current_message,request_type,id from requests where uri_ontology = ? and status != 'rejected'";
         StringBuilder csv = new StringBuilder();
         List<Object> args = new ArrayList<>();
         args.add(ontology);

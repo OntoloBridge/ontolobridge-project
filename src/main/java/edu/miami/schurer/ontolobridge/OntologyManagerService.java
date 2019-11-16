@@ -38,9 +38,9 @@ public class OntologyManagerService {
 
     public List<MaintainersObject> GetMaintainers(String superclass){
         // for each request attempt to find maintainers and ontology by the short term field
-        String sql1 = "select o.\"name\" as ontology_name," +
+        String sql1 = "select o.`name` as ontology_name," +
                 "o.ontology_short," +
-                "m.\"name\" as maintainer_name," +
+                "m.`name` as maintainer_name," +
                 "m.contact_location," +
                 "m.contact_method " +
                 "from ontologies o " +
@@ -66,7 +66,7 @@ public class OntologyManagerService {
     public void checkNewNotifications()
     {
         //SQL statement to get the relevent information of id of request, assumed ontology and type of request but only if no ontology has been assigned
-        String sql = "select id,superclass_ontology,type from requests where (uri_ontology = '') IS NOT FALSE";
+        String sql = "select id,superclass_ontology,request_type from requests where (uri_ontology = '') IS NOT FALSE";
 
         //retrieve results and store in simple hashmap
         List<HashMap<String,Object>> unassignedRequests = JDBCTemplate.query(sql,
@@ -74,7 +74,7 @@ public class OntologyManagerService {
             HashMap<String,Object> h = new HashMap<>();
             h.put("id",rs.getInt(1));
             h.put("superclass",rs.getString(2));
-            h.put("type",rs.getString(3));
+            h.put("request_type",rs.getString(3));
             return h;
         });
 
@@ -82,9 +82,9 @@ public class OntologyManagerService {
         for(HashMap<String,Object> E: unassignedRequests){
 
             // for each request attempt to find maintainers and ontology by the short term field
-            String sql1 = "select o.\"name\" as ontology_name," +
+            String sql1 = "select o.`name` as ontology_name," +
                     "o.ontology_short," +
-                    "m.\"name\" as maintainer_name," +
+                    "m.`name` as maintainer_name," +
                     "m.contact_location," +
                     "m.contact_method " +
                     "from ontologies o " +
@@ -106,9 +106,9 @@ public class OntologyManagerService {
 
             //if we get maintainers notify them, otherwise assume we have no idea who this belongs to and notify the sys admins
             if(maintainers.size() == 0) {
-                sql1 = "select o.\"name\" as ontology_name," +
+                sql1 = "select o.`name` as ontology_name," +
                         "o.ontology_short," +
-                        "m.\"name\" as maintainer_name," +
+                        "m.`name` as maintainer_name," +
                         "m.contact_location," +
                         "m.contact_method " +
                         "from ontologies o " +

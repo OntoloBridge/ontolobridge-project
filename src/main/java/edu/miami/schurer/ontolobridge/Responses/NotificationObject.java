@@ -5,21 +5,21 @@ import java.sql.Date;
 public class NotificationObject {
     private int id;
     private boolean sent = false;
-    private String type;
+    private String notification_method;
     private String address;
     private String title;
     private String message;
-    private Date createDate;
+    private Date createdDate;
     private Date sentDate;
 
-    public NotificationObject(int id,String type,String title, boolean sent, String address, String message, Date createDate, Date sentDate) {
+    public NotificationObject(int id, String notification_method, String title, boolean sent, String address, String message, Date createdDate, Date sentDate) {
         this.id = id;
-        this.type = type;
+        this.notification_method = notification_method;
         this.title = title;
         this.sent = sent;
         this.address = address;
         this.message = message;
-        this.createDate = createDate;
+        this.createdDate = createdDate;
         this.sentDate = sentDate;
     }
 
@@ -35,8 +35,8 @@ public class NotificationObject {
         return title;
     }
 
-    public String getType(){
-        return type;
+    public String getNotificationMethod(){
+        return notification_method;
     }
 
     public String getAddress() {
@@ -47,8 +47,8 @@ public class NotificationObject {
         return message;
     }
 
-    public Date getCreateDate() {
-        return createDate;
+    public Date getCreatedDate() {
+        return createdDate;
     }
 
     public Date getSentDate() {

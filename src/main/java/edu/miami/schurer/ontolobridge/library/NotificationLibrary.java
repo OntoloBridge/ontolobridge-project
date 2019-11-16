@@ -19,7 +19,7 @@ public class NotificationLibrary {
                                        String message,
                                        String title){
         List<Object> args = new ArrayList<>();
-        String sql = "insert into notifications (\"type\",\"address\",\"message\",\"title\",\"createDate\") values(?,?,?,?,current_date) RETURNING id";
+        String sql = "insert into notifications (notification_method,\"address\",\"message\",\"title\",created_date) values(?,?,?,?,current_date) RETURNING id";
         args.add(type);
         args.add(address);
         args.add(message);

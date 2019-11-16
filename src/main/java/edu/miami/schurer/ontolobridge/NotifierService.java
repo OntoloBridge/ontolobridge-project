@@ -40,21 +40,21 @@ public class NotifierService{
         List<NotificationObject> notifications = JDBCTemplate.query(sql,
                 (rs, rowNum) -> new NotificationObject(
                         rs.getInt("id"),
-                        rs.getString("type"),
+                        rs.getString("notification_method"),
                         rs.getString("title"),
                         rs.getBoolean("sent"),
                         rs.getString("address"),
                         rs.getString("message"),
-                        rs.getDate("createDate"),
-                        rs.getDate("sentDate")));
+                        rs.getDate("created_date"),
+                        rs.getDate("sent_date")));
 
         //for each notification attempt to send the notification
         for (NotificationObject n: notifications) {
-            if(n.getType().equals("email") && emailHost != null && !emailHost.isEmpty()){
+            if(n.getNotificationMethod().equals("email") && emailHost != null && !emailHost.isEmpty()){
                 Object[] args = {n.getId()};
                 if(sendEmailNotification(n.getAddress(), n.getTitle(), n.getMessage()))
                     System.out.println("Sending email to "+n.getAddress());
-                    JDBCTemplate.update("UPDATE notifications SET sent = 1,\"sentDate\" = current_date WHERE id = ?",args);
+                    JDBCTemplate.update("UPDATE notifications SET sent = 1, sent_date = current_date WHERE id = ?",args);
             }
         }
     }
