@@ -1,16 +1,12 @@
 package edu.miami.schurer.ontolobridge.library;
 
-import edu.miami.schurer.ontolobridge.NotifierService;
 import edu.miami.schurer.ontolobridge.Responses.DebugStatusResponse;
 import edu.miami.schurer.ontolobridge.Responses.OperationResponse;
 import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import edu.miami.schurer.ontolobridge.utilities.DbUtil;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,7 +15,7 @@ public class RequestsLibrary {
     static public int RequestsTerm(NamedParameterJdbcTemplate jdbcTemplate,
                                        String label,
                                        String description,
-                                       String superclass_uri,
+                                       String uri_superclass,
                                        String superclass_ontology,
                                        String reference,
                                        String justification,
@@ -27,12 +23,12 @@ public class RequestsLibrary {
                                        String submitter_email,
                                        boolean notify,
                                        String requestType){
-        return RequestsTerm(jdbcTemplate.getJdbcTemplate(),label,description,superclass_uri,superclass_ontology,reference,justification,submitter,submitter_email,notify,"",requestType);
+        return RequestsTerm(jdbcTemplate.getJdbcTemplate(),label,description,uri_superclass,superclass_ontology,reference,justification,submitter,submitter_email,notify,"",requestType);
     }
     static public int RequestsTerm(JdbcTemplate jdbcTemplate,
                                     String label,
                                     String description,
-                                    String superclass_uri,
+                                    String uri_superclass,
                                     String superclass_ontology,
                                     String reference,
                                     String justification,
@@ -41,79 +37,67 @@ public class RequestsLibrary {
                                     boolean notify,
                                     String ontology,
                                     String requestType){
+        boolean isMySQL = DbUtil.isMySQL(jdbcTemplate);
         String sql = "INSERT INTO requests (" +
-                "`label`," +
-                "`description`," +
-                "`uri_superclass`," +
-                "`superclass_id`," +
-                "`superclass_ontology`," +
-                "`reference`," +
-                "`justification`," +
-                "`submitter`," +
-                "`submitter_email`," +
-                "`notify`," +
-                "`request_type`," +
-                "`uri_ontology`" +
+                "label," +
+                "description," +
+                "uri_superclass," +
+                "superclass_id," +
+                "superclass_ontology," +
+                "reference," +
+                "justification," +
+                "submitter," +
+                "submitter_email," +
+                "notify," +
+                "request_type," +
+                "uri_ontology" +
                 ") VALUES ("+
                 "?,?,?,?,?,?,?,?,?,?,?,?)";
+
+        if (!isMySQL) {
+            sql += " RETURNING id;";
+        }
+
         List<Object> args = new ArrayList<>();
         args.add(label);
         args.add(description);
 
-
-
         // uri_superclass
-        if(superclass_uri.contains("://")){
-            args.add(superclass_uri);
-            if(superclass_uri.contains("#"))
-                superclass_uri = superclass_uri.substring(superclass_uri.lastIndexOf("#")+1);
+        if(uri_superclass.contains("://")){
+                args.add(uri_superclass);
+            if(uri_superclass.contains("#"))
+                uri_superclass = uri_superclass.substring(uri_superclass.lastIndexOf("#")+1);
             else
-                superclass_uri = superclass_uri.substring(superclass_uri.lastIndexOf("/")+1);
+                uri_superclass = uri_superclass.substring(uri_superclass.lastIndexOf("/")+1);
         }else{
             args.add("");
         }
 
-
-
-
-
         // superclass_id
-        if (superclass_uri.contains("ONTB")) {
-            args.add(Integer.parseInt(superclass_uri.substring(superclass_uri.indexOf("ONTB")+5)));
-        }else if(superclass_uri.contains("_")){
-            args.add(Integer.parseInt(superclass_uri.substring(superclass_uri.indexOf("_")+1)));
-        }else if(superclass_uri.contains(":")){
-            args.add(Integer.parseInt(superclass_uri.substring(superclass_uri.indexOf(":")+1)));
+        if (uri_superclass.contains("ONTB")) {
+            args.add(Integer.parseInt(uri_superclass.substring(uri_superclass.indexOf("ONTB")+5)));
+        }else if(uri_superclass.contains("_")){
+            args.add(Integer.parseInt(uri_superclass.substring(uri_superclass.indexOf("_")+1)));
+        }else if(uri_superclass.contains(":")){
+            args.add(Integer.parseInt(uri_superclass.substring(uri_superclass.indexOf(":")+1)));
         }else {
             args.add(0);
         }
 
-
-
-
         //superclass_ontology
         if (superclass_ontology.isBlank()) {
-            if (superclass_uri.contains("ONTB")) {
+            if (uri_superclass.contains("ONTB")) {
                 args.add(null);
-            }else if(superclass_uri.contains("_")){
-                args.add(superclass_uri.substring(0,superclass_uri.indexOf("_")));
-            }else if(superclass_uri.contains(":")){
-                args.add(superclass_uri.substring(0,superclass_uri.indexOf(":")));
+            }else if(uri_superclass.contains("_")){
+                args.add(uri_superclass.substring(0,uri_superclass.indexOf("_")));
+            }else if(uri_superclass.contains(":")){
+                args.add(uri_superclass.substring(0,uri_superclass.indexOf(":")));
             }else {
                 args.add(null);
             }
         } else {
             args.add(superclass_ontology);
         }
-
-
-
-
-
-
-
-
-
 
         args.add(reference);
         args.add(justification);
@@ -122,15 +106,14 @@ public class RequestsLibrary {
         args.add(notify?1:0);
         args.add(requestType);
         args.add(ontology.isEmpty()?"":ontology);
+        Integer id = null;
 
-
-
-//        Integer id = jdbcTemplate.queryForObject(sql, args.toArray(),Integer.class);
-
-        jdbcTemplate.update(sql, args.toArray());
-        Integer id = jdbcTemplate.queryForObject("select last_insert_id()", Integer.class);
-
-
+        if (isMySQL) {
+            jdbcTemplate.update(sql, args.toArray());
+            id = jdbcTemplate.queryForObject("select last_insert_id()", Integer.class);
+        } else {
+            id = jdbcTemplate.queryForObject(sql, args.toArray(), Integer.class);
+        }
 
         jdbcTemplate.execute("insert into request_status (request_id,current_status) VALUES("+id+",'submitted')");
         return id;

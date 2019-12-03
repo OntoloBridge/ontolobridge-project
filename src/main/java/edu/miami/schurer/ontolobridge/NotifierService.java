@@ -35,7 +35,7 @@ public class NotifierService{
     @Scheduled(cron="0 */1 * * * ?")
     public void checkNewRequests()
     {
-        //get the mext 20 notifications not sent
+        //get the next 20 notifications not sent
         String sql = "select * from notifications where sent = 0 limit 20";
         List<NotificationObject> notifications = JDBCTemplate.query(sql,
                 (rs, rowNum) -> new NotificationObject(

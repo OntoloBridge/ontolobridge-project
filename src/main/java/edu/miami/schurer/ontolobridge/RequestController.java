@@ -2,18 +2,24 @@ package edu.miami.schurer.ontolobridge;
 
 import edu.miami.schurer.ontolobridge.Responses.*;
 import edu.miami.schurer.ontolobridge.library.NotificationLibrary;
+import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import io.swagger.annotations.ApiParam;
 import edu.miami.schurer.ontolobridge.library.RequestsLibrary;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotBlank;
+import java.awt.image.ImagingOpException;
+import java.io.IOException;
 import java.util.List;
 
 
@@ -30,15 +36,25 @@ public class RequestController extends BaseController {
     @Autowired
     public OntologyManagerService Manager;
 
+    @Autowired
+    private AppProperties appProp;
+
+    public NotificationLibrary notLib ;
+
+    @PostConstruct
+    void Init(){
+        notLib = new NotificationLibrary(appProp);
+    }
+
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successful requests",response = RequestResponse.class),
             @ApiResponse(code = 500, message = "Internal server error", response = ExceptionResponse.class)
-    }
+        }
     )
     @RequestMapping(path="/RequestTerm", method= RequestMethod.POST)
     public Object requestTerm(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") @NotBlank String label,
                               @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") @NotBlank String description,
-                              @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") @NotBlank String superclass_uri,
+                              @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") @NotBlank String uri_superclass,
                               @ApiParam(value = "Superclass ontology of suggested term") @RequestParam(value="superclass_ontology", defaultValue = "") String superclass_ontology,
                               @ApiParam(value = "Any references for this requests") @RequestParam(value="reference",defaultValue = "") @NotBlank String reference,
                               @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
@@ -49,7 +65,7 @@ public class RequestController extends BaseController {
 
         Integer id = RequestsLibrary.RequestsTerm(JDBCTemplate, label,
                 description,
-                superclass_uri,
+                uri_superclass,
                 superclass_ontology,
                 reference,
                 justification,
@@ -68,6 +84,17 @@ public class RequestController extends BaseController {
 
 
         if(submitter_email != null && notify){
+            notLib.InsertEmail(JDBCTemplate,
+                    "/emails/termSubmission.email",
+                    label,
+                    description,
+                    uri_superclass,
+                    reference,
+                    justification,
+                    submitter,
+                    submitter_email,
+                    "term",
+                    id.toString());
             notifier.sendEmailNotification(submitter_email,"Received Term Request","Hello "+submitter+"\n\n We have received your request for "+label+" and appropriate maintainers notified");
         }
 
@@ -80,7 +107,7 @@ public class RequestController extends BaseController {
     @RequestMapping(path="/RequestDataProperty", method= RequestMethod.POST)
     public Object requestDataProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
                               @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
-                              @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") String superclass_uri,
+                              @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") String uri_superclass,
                               @ApiParam(value = "Superclass ontology of suggested term") @RequestParam(value="superclass_ontology", defaultValue = "") String superclass_ontology,
                               @ApiParam(value = "Any references for this requests") @RequestParam(value="reference",defaultValue = "") String reference,
                               @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
@@ -95,7 +122,7 @@ public class RequestController extends BaseController {
             return new ExceptionResponse("Description is required");
         Integer id = RequestsLibrary.RequestsTerm(JDBCTemplate, label,
                 description,
-                superclass_uri,
+                uri_superclass,
                 superclass_ontology,
                 reference,
                 justification,
@@ -120,7 +147,7 @@ public class RequestController extends BaseController {
     @RequestMapping(path="/RequestObjectProperty", method= RequestMethod.POST)
     public Object requestObjectProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
                                       @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
-                                      @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") String superclass_uri,
+                                      @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") String uri_superclass,
                                       @ApiParam(value = "Superclass ontology of suggested term") @RequestParam(value="superclass_ontology", defaultValue = "") String superclass_ontology,
                                       @ApiParam(value = "Any references for this requests") @RequestParam(value="reference",defaultValue = "") String reference,
                                       @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
@@ -131,7 +158,7 @@ public class RequestController extends BaseController {
 
         Integer id = RequestsLibrary.RequestsTerm(JDBCTemplate, label,
                 description,
-                superclass_uri,
+                uri_superclass,
                 superclass_ontology,
                 reference,
                 justification,
@@ -157,7 +184,7 @@ public class RequestController extends BaseController {
     @RequestMapping(path="/RequestAnnotationProperty", method= RequestMethod.POST)
     public Object requestAnnotationProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
                                         @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
-                                        @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") String superclass_uri,
+                                        @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") String uri_superclass,
                                         @ApiParam(value = "Superclass ontology of suggested term") @RequestParam(value="superclass_ontology", defaultValue = "") String superclass_ontology,
                                         @ApiParam(value = "Any references for this requests") @RequestParam(value="reference",defaultValue = "") String reference,
                                         @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
@@ -168,7 +195,7 @@ public class RequestController extends BaseController {
 
         Integer id = RequestsLibrary.RequestsTerm(JDBCTemplate, label,
                 description,
-                superclass_uri,
+                uri_superclass,
                 superclass_ontology,
                 reference,
                 justification,

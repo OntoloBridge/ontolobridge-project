@@ -59,7 +59,7 @@ public class RetrieveController extends BaseController {
                        if (rowNum == 1)
                            keys.add("termType");
                        for (int i = 1; i <= metadata.getColumnCount(); i++) {
-                           if (metadata.getColumnName(i).equals("superclass_uri") && rowNum != 1) {
+                           if (metadata.getColumnName(i).equals("uri_superclass") && rowNum != 1) {
                                keys.add("superclass_label");
                                keys.add("superclass");
                            }
@@ -69,8 +69,8 @@ public class RetrieveController extends BaseController {
                            if (rowNum != 1)
                                keys.add(metadata.getColumnName(i));
                        }
-                       if (rs.getString("superclass_uri") != null && !rs.getString("superclass_uri").isEmpty())
-                           array.put("superclass", rs.getString("superclass_uri"));
+                       if (rs.getString("uri_superclass") != null && !rs.getString("uri_superclass").isEmpty())
+                           array.put("superclass", rs.getString("uri_superclass"));
                        else if (rs.getString("superclass_ontology") != null && !rs.getString("superclass_ontology").isEmpty() && rs.getString("superclass_id") != null && !rs.getString("superclass_id").isEmpty())
                            array.put("superclass", rs.getString("superclass_ontology") + "_" + rs.getString("superclass_id"));
                        else if (rs.getString("superclass_id") != null && isInteger(rs.getString("superclass_id")))

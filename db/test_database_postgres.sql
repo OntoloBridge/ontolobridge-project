@@ -203,6 +203,27 @@ CREATE TABLE public.request_status (
 ALTER TABLE public.request_status OWNER TO ob_user;
 
 --
+-- Name: request_status_id_seq; Type: SEQUENCE; Schema: public; Owner: ob_user
+--
+
+CREATE SEQUENCE public.request_status_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.request_status_id_seq OWNER TO ob_user;
+
+--
+-- Name: request_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: ob_user
+--
+
+ALTER SEQUENCE public.request_status_id_seq OWNED BY public.request_status.id;
+
+
+--
 -- Name: requests; Type: TABLE; Schema: public; Owner: ob_user
 --
 
@@ -271,6 +292,13 @@ ALTER TABLE ONLY public.ontologies ALTER COLUMN id SET DEFAULT nextval('public.o
 --
 
 ALTER TABLE ONLY public.ontology_to_maintainer ALTER COLUMN id SET DEFAULT nextval('public.ontology_to_maintainer_id_seq'::regclass);
+
+
+--
+-- Name: request_status id; Type: DEFAULT; Schema: public; Owner: ob_user
+--
+
+ALTER TABLE ONLY public.request_status ALTER COLUMN id SET DEFAULT nextval('public.request_status_id_seq'::regclass);
 
 
 --
@@ -424,10 +452,6 @@ COPY public.requests (id, label, description, superclass_ontology, superclass_id
 24	test	test	est	1	test	test	test	???	\N		2018-01-08 11:34:10.06363	2018-01-08 11:34:10.06363	accepted	\N	\N		\N	term
 25	test2	test	est	1	test	test	test	???	\N		2018-01-08 11:34:19.414569	2018-01-08 11:34:19.414569	rejected	\N	\N		\N	term
 26	Test Term	This is a Test	est	1000	none	N/A	John	???	\N	test	2018-01-18 12:11:49.138629	2018-01-18 12:11:49.138629	submitted	\N	\N		\N	term
-70	apr17 term	Term of April 17	\N	0					\N	\N	2019-04-17 19:22:11.40765	2019-04-17 19:22:11.40765	submitted	\N	http://www.yahoo.com		0	term
-71	apr17 20term	Term of April 17	\N	0					\N	\N	2019-04-17 19:22:53.182586	2019-04-17 19:22:53.182586	submitted	\N	http://www.yahoo.com		0	term
-72	apr17 20term	Term 20of 20Apri 2017	\N	0					\N	\N	2019-04-17 19:23:17.803182	2019-04-17 19:23:17.803182	submitted	\N	http://www.yahoo.com		0	term
-73	apr17 20term	Term 20of 20Apri 2017	\N	0					\N	\N	2019-04-17 19:23:44.394167	2019-04-17 19:23:44.394167	submitted	\N	http://www.yahoo.com		0	term
 89	dd		\N	0			Michael Dorf	OPTIMAL	\N	\N	2019-04-19 16:39:29.02824	2019-04-19 16:39:29.02824	submitted	\N	http://webprotege.stanford.edu/RB7q67Gf4JtjKTY4hLsKWOU		0	term
 107	ÑÐ´ÑÐ³	Ð´ÑÑ	\N	0			Michael Dorf	OPTIMAL	\N	\N	2019-04-23 18:35:45.489955	2019-04-23 18:35:45.489955	submitted	\N			0	term
 108	qwe	qrqr	\N	0			Michael Dorf	OPTIMAL	\N	\N	2019-04-23 18:40:49.447171	2019-04-23 18:40:49.447171	submitted	\N			0	term
@@ -435,8 +459,6 @@ COPY public.requests (id, label, description, superclass_ontology, superclass_id
 110	sd	sgfgsgg	\N	0			Michael Dorf	OPTIMAL	\N	\N	2019-04-23 18:45:58.335468	2019-04-23 18:45:58.335468	submitted	\N			0	term
 124	my term	term description	\N	0	http://www.yahoo.com		Michael Dorf	OPTIMAL	\N	\N	2019-04-25 17:12:58.918584	2019-04-25 17:12:58.918584	submitted	\N			0	term
 131	Am2.2-beta2AR cell	U937 cells stably transfected with and expressing the surface displayed fusion protein of FAP (fluorogen activating protein) AM2.2 to the extracellular N-terminus of the human Î²2AR gene  (thus, 'AM2.2-beta2AR'). See PMCID: PMC3621705	BAO	3048		UCSF term	Hande McGinty	BAO	\N	\N	2019-05-02 22:45:03.726069	2019-05-02 22:45:03.726069	submitted	\N			0	term
-74	apr17 20term	Term 20of 20Apri 2017	\N	0					\N	\N	2019-04-17 20:23:16.243623	2019-04-17 20:23:16.243623	submitted	\N	http://www.yahoo.com		0	term
-75	apr17 20term	Term 20of 20Apri 2017	\N	0					\N	\N	2019-04-17 20:27:09.397955	2019-04-17 20:27:09.397955	submitted	\N			0	term
 90			\N	0			Michael Dorf	OPTIMAL	\N	\N	2019-04-19 16:43:05.058351	2019-04-19 16:43:05.058351	submitted	\N	http://webprotege.stanford.edu/RB7q67Gf4JtjKTY4hLsKWOU		0	term
 111	et	eyrey	\N	0			Michael Dorf	OPTIMAL	\N	\N	2019-04-23 18:49:36.58215	2019-04-23 18:49:36.58215	submitted	\N			0	term
 125	ThisIsTest1	Hande's test 	\N	0	test	test	Hande McGinty	BAO	\N	\N	2019-04-30 14:23:15.604454	2019-04-30 14:23:15.604454	submitted	\N			0	term
@@ -446,8 +468,6 @@ COPY public.requests (id, label, description, superclass_ontology, superclass_id
 30	mish test term	great new term	\N	20	\N	\N	\N	???	\N	\N	2018-01-31 20:29:41.331944	2018-01-31 20:29:41.331944	submitted	\N	http://dev3.ccs.miami.edu:8080/ontolobridge#ONTB_000000020		\N	term
 31	Misha Test Term	This is a new term requested by misha	\N	3				???	\N	\N	2018-02-01 19:54:17.40911	2018-02-01 19:54:17.40911	submitted	\N	http://dev3.ccs.miami.edu:8080/ontolobridge#ONTB_000000003		\N	term
 132	beta-arrestin clustering assay	The Transfluor assay employs a a beta-arrestin-GFP fusion protein to detect activation of GPCRs: Upon ligand binding the GPCR, cytosolic arrestin-GFP quickly translocates to the cell membrane and then to endocytic vesicles, where it 'clusters' and can be detected by fluorescent image analysis. (Developed / commercialized by Norak, then Molecular Devices)	\N	0		UCSF term, (aka 'Transfluor' assay)	Hande McGinty	BAO	\N	\N	2019-05-03 13:17:14.731653	2019-05-03 13:17:14.731653	submitted	\N			0	term
-76	term apr 14 15:30	term apr 14 15:30	\N	0					\N	\N	2019-04-18 17:55:04.208383	2019-04-18 17:55:04.208383	submitted	\N	http://www.yahoo.com		0	term
-77	term apr 14 15:30	term apr 14 15:30	\N	0					\N	\N	2019-04-18 17:55:16.660597	2019-04-18 17:55:16.660597	submitted	\N	http://www.yahoo.com		0	term
 91	dd		\N	0			Michael Dorf	OPTIMAL	\N	\N	2019-04-19 16:50:41.486485	2019-04-19 16:50:41.486485	submitted	\N	http://webprotege.stanford.edu/RB7q67Gf4JtjKTY4hLsKWOU		0	term
 92			\N	0			Michael Dorf	OPTIMAL	\N	\N	2019-04-19 16:52:50.992632	2019-04-19 16:52:50.992632	submitted	\N	http://webprotege.stanford.edu/RB7q67Gf4JtjKTY4hLsKWOU		0	term
 93	ss		\N	0			Michael Dorf	OPTIMAL	\N	\N	2019-04-19 16:52:54.133975	2019-04-19 16:52:54.133975	submitted	\N	http://webprotege.stanford.edu/RB7q67Gf4JtjKTY4hLsKWOU		0	term
@@ -462,6 +482,16 @@ COPY public.requests (id, label, description, superclass_ontology, superclass_id
 44	has positive control	The positive control for an assay.	bao:BAO	740			Alex Clark	???	\N	\N	2018-03-09 15:50:09.875016	2018-03-09 15:50:09.875016	submitted	\N			0	term
 45	has negative control	The negative control for an assay.	bao	740			Alex Clark	BAO	\N	\N	2018-03-09 15:51:06.107176	2018-03-09 15:51:06.107176	submitted	\N	\N		0	term
 46	Test Class 2	test	BAO	740	test	test	test	BAO	\N	\N	2018-05-31 14:48:25.279981	2018-05-31 14:48:25.279981	submitted	\N	\N		0	term
+70	apr17 term	Term of April 17	\N	0				???	\N	\N	2019-04-17 19:22:11.40765	2019-04-17 19:22:11.40765	submitted	\N	http://www.yahoo.com		0	term
+71	apr17 20term	Term of April 17	\N	0				???	\N	\N	2019-04-17 19:22:53.182586	2019-04-17 19:22:53.182586	submitted	\N	http://www.yahoo.com		0	term
+72	apr17 20term	Term 20of 20Apri 2017	\N	0				???	\N	\N	2019-04-17 19:23:17.803182	2019-04-17 19:23:17.803182	submitted	\N	http://www.yahoo.com		0	term
+73	apr17 20term	Term 20of 20Apri 2017	\N	0				???	\N	\N	2019-04-17 19:23:44.394167	2019-04-17 19:23:44.394167	submitted	\N	http://www.yahoo.com		0	term
+74	apr17 20term	Term 20of 20Apri 2017	\N	0				???	\N	\N	2019-04-17 20:23:16.243623	2019-04-17 20:23:16.243623	submitted	\N	http://www.yahoo.com		0	term
+75	apr17 20term	Term 20of 20Apri 2017	\N	0				???	\N	\N	2019-04-17 20:27:09.397955	2019-04-17 20:27:09.397955	submitted	\N			0	term
+76	term apr 14 15:30	term apr 14 15:30	\N	0				???	\N	\N	2019-04-18 17:55:04.208383	2019-04-18 17:55:04.208383	submitted	\N	http://www.yahoo.com		0	term
+77	term apr 14 15:30	term apr 14 15:30	\N	0				???	\N	\N	2019-04-18 17:55:16.660597	2019-04-18 17:55:16.660597	submitted	\N	http://www.yahoo.com		0	term
+142	Testing Mysql	mysql test	BAO	3112				???	\N	\N	2019-11-26 10:59:42.613994	2019-11-26 10:59:42.613994	submitted	\N	http://www.bioassayontology.org/bao#BAO_0003112		1	term
+143	Testing Mysql	mysql test	BAO	3112				???	\N	\N	2019-11-26 11:05:37.5	2019-11-26 11:05:37.5	submitted	\N	http://www.bioassayontology.org/bao#BAO_0003112		1	term
 \.
 
 
@@ -494,10 +524,17 @@ SELECT pg_catalog.setval('public.ontology_to_maintainer_id_seq', 10, true);
 
 
 --
+-- Name: request_status_id_seq; Type: SEQUENCE SET; Schema: public; Owner: ob_user
+--
+
+SELECT pg_catalog.setval('public.request_status_id_seq', 79, true);
+
+
+--
 -- Name: requests_id_seq; Type: SEQUENCE SET; Schema: public; Owner: ob_user
 --
 
-SELECT pg_catalog.setval('public.requests_id_seq', 141, true);
+SELECT pg_catalog.setval('public.requests_id_seq', 143, true);
 
 
 --
