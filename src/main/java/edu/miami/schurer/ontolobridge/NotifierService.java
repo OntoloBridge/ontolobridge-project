@@ -61,6 +61,8 @@ public class NotifierService{
 
     @SuppressWarnings("ThrowablePrintedToSystemOut")
     public boolean sendEmailNotification(String email, String subject, String message){
+        if(emailHost.isEmpty())
+            return true;
         HashMap<String,String> headers = new HashMap<>();
         headers.put("X-Mailer","Ontolobridge Mailer"); //let people know what sent this message
         try {

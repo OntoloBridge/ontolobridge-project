@@ -59,7 +59,7 @@ public class NotificationLibrary {
                 values.get("label").toString(),
                 values.get("description").toString(),
                 values.get("uri_superclass").toString(),
-                values.get("reference").toString(),
+                values.get("references").toString(),
                 values.get("justification").toString(),
                 values.get("submitter").toString(),
                 values.get("submitter_email").toString(),

@@ -85,7 +85,7 @@ public class RequestsLibrary {
         }
 
         //superclass_ontology
-        if (superclass_ontology.isBlank()) {
+        if (superclass_ontology.isEmpty()) {
             if (uri_superclass.contains("ONTB")) {
                 args.add(null);
             }else if(uri_superclass.contains("_")){
