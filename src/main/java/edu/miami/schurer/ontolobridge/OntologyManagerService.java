@@ -1,16 +1,25 @@
 package edu.miami.schurer.ontolobridge;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.miami.schurer.ontolobridge.Responses.MaintainersObject;
 import edu.miami.schurer.ontolobridge.library.NotificationLibrary;
 import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import it.ozimov.springboot.mail.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +35,9 @@ public class OntologyManagerService {
     //we want to know where we are sending from
     @Value("${spring.mail.username}")
     private String emailHost;
+
+    @Value("${app.bioportal.apikey}")
+    private String apiKey;
 
     //Named template to allow insertion of array into query in SigCSmallMoleculeLibrary
     @Autowired
@@ -70,7 +82,63 @@ public class OntologyManagerService {
         return maintainers;
     }
 
-    @Scheduled(cron="0 */1 * * * ?")
+    @Scheduled(cron="*/5 * * * * ?")
+    public void checkNoParentLabel() throws IOException {
+        String sql = "select url,ontology_short,seperator,padding from ontologies where url IS NOT NULL";
+        HashMap<String,HashMap<String,Object>> ontologies = new HashMap<>();
+        JDBCTemplate.query(sql,
+                (rs, rowNum) -> {
+                    HashMap<String,Object> h = new HashMap<>();
+                    h.put("url",rs.getString("url"));
+                    h.put("ontology_short",rs.getString("ontology_short"));
+                    h.put("seperator",rs.getString("seperator"));
+                    h.put("padding",rs.getInt("padding"));
+                    ontologies.put(rs.getString("ontology_short"),h);
+                    return h;
+                });
+        String sql1 = "select id,superclass_id,superclass_ontology from requests where superclass_label is NULL";
+        List<HashMap<String,Object>> missingParents = JDBCTemplate.query(sql1,
+                (rs, rowNum) -> {
+                    HashMap<String,Object> h = new HashMap<>();
+                    h.put("id",rs.getString("id"));
+                    h.put("superclass_ontology",rs.getString("superclass_ontology"));
+                    h.put("superclass_id",rs.getInt("superclass_id"));
+                    return h;
+                });
+        for(HashMap<String,Object> item: missingParents) {
+            if(!ontologies.containsKey(item.get("superclass_ontology")))
+                continue;
+            String bioportalAPI = "http://data.bioontology.org/ontologies/";
+            String paddingFormat= "%"+  ontologies.get(item.get("superclass_ontology").toString()).get("padding").toString()+"d";
+            bioportalAPI += item.get("superclass_ontology");
+            bioportalAPI += "/classes/";
+            bioportalAPI += URLEncoder.encode(ontologies.get(item.get("superclass_ontology").toString()).get("url").toString()+
+                    ontologies.get(item.get("superclass_ontology").toString()).get("seperator").toString()+
+                    item.get("superclass_ontology").toString()+
+                    "_"+String.format(paddingFormat,
+                    (int)item.get("superclass_id")).replace(' ', '0'));
+            bioportalAPI += "?apikey="+apiKey;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "application/json");
+            headers.set("User-Agent", "Ontolobridge; Contact jpt55@med.miami.edu");
+
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity entity = new HttpEntity(headers);
+            HttpEntity<String> response = restTemplate.exchange(bioportalAPI, HttpMethod.GET, entity, String.class);
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(response.getBody());
+            String label = root.get("prefLabel").asText();
+
+            String sql2 = "update requests set superclass_label = ? where id = ?";
+            List<Object> args = new ArrayList<>();
+            args.add(label);
+            args.add(item.get("id"));
+            JDBCTemplate.update(sql2,args.toArray());
+        }
+    }
+
+    @Scheduled(cron="0 * * * * ?")
     public void checkNewNotifications()
     {
         //SQL statement to get the relevent information of id of request, assumed ontology and type of request but only if no ontology has been assigned
