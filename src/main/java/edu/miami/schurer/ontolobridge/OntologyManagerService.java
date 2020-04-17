@@ -84,6 +84,7 @@ public class OntologyManagerService {
 
     @Scheduled(cron="*/5 * * * * ?")
     public void checkNoParentLabel() throws IOException {
+        apiKey = "";
         if(apiKey.isEmpty())
             return;
         String sql = "select url,ontology_short,seperator,padding from ontologies where url IS NOT NULL";
