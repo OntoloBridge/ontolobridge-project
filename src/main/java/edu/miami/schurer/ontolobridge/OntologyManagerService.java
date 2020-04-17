@@ -84,6 +84,8 @@ public class OntologyManagerService {
 
     @Scheduled(cron="*/5 * * * * ?")
     public void checkNoParentLabel() throws IOException {
+        if(apiKey.isEmpty())
+            return;
         String sql = "select url,ontology_short,seperator,padding from ontologies where url IS NOT NULL";
         HashMap<String,HashMap<String,Object>> ontologies = new HashMap<>();
         JDBCTemplate.query(sql,

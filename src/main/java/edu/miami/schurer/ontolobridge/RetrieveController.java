@@ -55,7 +55,7 @@ public class RetrieveController extends BaseController {
                    public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
                        ResultSetMetaData metadata = rs.getMetaData();
                        HashMap<String, String> array = new HashMap<>();
-                       array.put("termType", "new " + rs.getString("type"));
+                       array.put("termType", "new " + rs.getString("request_type"));
                        if (rowNum == 1)
                            keys.add("termType");
                        for (int i = 1; i <= metadata.getColumnCount(); i++) {
