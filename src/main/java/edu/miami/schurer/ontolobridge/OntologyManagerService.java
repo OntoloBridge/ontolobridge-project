@@ -157,7 +157,7 @@ public class OntologyManagerService {
             h.put("description",rs.getString("description"));
             h.put("superclass_ontology",rs.getString("superclass_ontology"));
             h.put("superclass_id",rs.getInt("superclass_id"));
-            h.put("references",rs.getString("references"));
+            h.put("references",rs.getString("reference"));
             h.put("justification",rs.getString("justification"));
             h.put("submitter",rs.getString("submitter"));
             h.put("uri_ontology",rs.getString("uri_ontology"));
