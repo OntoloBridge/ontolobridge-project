@@ -12,14 +12,19 @@ import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -84,7 +89,6 @@ public class OntologyManagerService {
 
     @Scheduled(cron="*/5 * * * * ?")
     public void checkNoParentLabel() throws IOException {
-        apiKey = "";
         if(apiKey.isEmpty())
             return;
         String sql = "select url,ontology_short,seperator,padding from ontologies where url IS NOT NULL";
@@ -111,32 +115,45 @@ public class OntologyManagerService {
         for(HashMap<String,Object> item: missingParents) {
             if(!ontologies.containsKey(item.get("superclass_ontology")))
                 continue;
-            String bioportalAPI = "http://data.bioontology.org/ontologies/";
+            String bioportalAPI = "http://data.bioontology.org";
+            //String bioportalAPI = "http://127.0.0.1/test";
             String paddingFormat= "%"+  ontologies.get(item.get("superclass_ontology").toString()).get("padding").toString()+"d";
-            bioportalAPI += item.get("superclass_ontology");
-            bioportalAPI += "/classes/";
-            bioportalAPI += URLEncoder.encode(ontologies.get(item.get("superclass_ontology").toString()).get("url").toString()+
-                    ontologies.get(item.get("superclass_ontology").toString()).get("seperator").toString()+
+            String queryClass = "/ontologies/"+item.get("superclass_ontology").toString();
+            queryClass += "/classes/";
+            queryClass +=  URLEncoder.encode(ontologies.get(item.get("superclass_ontology").toString()).get("url").toString()+
+                   ontologies.get(item.get("superclass_ontology").toString()).get("seperator").toString()+
                     item.get("superclass_ontology").toString()+
                     "_"+String.format(paddingFormat,
-                    (int)item.get("superclass_id")).replace(' ', '0'));
-            bioportalAPI += "?apikey="+apiKey;
-
+                    (int)item.get("superclass_id")).replace(' ', '0'), "UTF-8");
+            UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(bioportalAPI).path(queryClass);
+            UriComponents components = builder.build(true);
+            URI uri = components.toUri();
+            //bioportalAPI = "http://data.bioontology.org/ontologies/BAO/classes/http%3A%2F%2Fwww.bioassayontology.org%2Fbao%23BAO_0003048?apikey=3f58b9d8-8896-4db0-8bc4-815c42d3df5b";
             HttpHeaders headers = new HttpHeaders();
             headers.set("Accept", "application/json");
+            headers.set("Authorization", "apikey token=" + apiKey);
             headers.set("User-Agent", "Ontolobridge; Contact jpt55@med.miami.edu");
+            //headers.set("Cookie","JSESSIONID=EC9EBA70B831429B74F7D2BF1F7E0A10");
 
             RestTemplate restTemplate = new RestTemplate();
             HttpEntity entity = new HttpEntity(headers);
-            HttpEntity<String> response = restTemplate.exchange(bioportalAPI, HttpMethod.GET, entity, String.class);
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(response.getBody());
-            String label = root.get("prefLabel").asText();
+            String label="";
+            try {
+                HttpEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode root = mapper.readTree(response.getBody());
+                label = root.get("prefLabel").asText();
+            }catch (HttpClientErrorException hcee){
+                if(hcee.getMessage().equals("404 Not Found")){
+                    label = "<NOT FOUND>";
+                }
+            }
+
 
             String sql2 = "update requests set superclass_label = ? where id = ?";
             List<Object> args = new ArrayList<>();
             args.add(label);
-            args.add(item.get("id"));
+            args.add(Integer.parseInt(item.get("id").toString()));
             JDBCTemplate.update(sql2,args.toArray());
         }
     }
