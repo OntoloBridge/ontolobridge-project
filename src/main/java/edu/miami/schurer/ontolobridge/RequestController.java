@@ -24,7 +24,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/REST")
+@RequestMapping("/requests")
 public class RequestController extends BaseController {
 
     @Autowired

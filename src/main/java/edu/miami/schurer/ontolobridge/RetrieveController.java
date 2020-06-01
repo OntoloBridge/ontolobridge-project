@@ -26,7 +26,7 @@ import java.util.*;
 
 
 @RestController
-@RequestMapping("/Retrieve")
+@RequestMapping("/retrieve")
 public class RetrieveController extends BaseController {
 
     @ApiResponses(value = {
