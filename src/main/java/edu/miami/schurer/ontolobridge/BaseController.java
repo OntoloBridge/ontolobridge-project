@@ -1,8 +1,14 @@
 package edu.miami.schurer.ontolobridge;
 
+import edu.miami.schurer.ontolobridge.library.AuthLibrary;
+import edu.miami.schurer.ontolobridge.library.NotificationLibrary;
+import edu.miami.schurer.ontolobridge.library.RequestsLibrary;
+import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
 
@@ -11,6 +17,24 @@ public class BaseController {
     //Named template to allow insertion of array into query in SigCSmallMoleculeLibrary
     @Autowired
     protected JdbcTemplate JDBCTemplate;
+
+    @Value("${api.cpanel.apitoken}")
+    String cpanelApiKey;
+
+    @Autowired
+    private AppProperties appProp;
+
+    NotificationLibrary notLib ;
+    AuthLibrary auth;
+    RequestsLibrary req;
+
+
+    @PostConstruct
+    void Init(){
+        notLib = new NotificationLibrary(appProp);
+        auth = new AuthLibrary(JDBCTemplate);
+        req = new RequestsLibrary(JDBCTemplate,cpanelApiKey);
+    }
 
     protected HashMap<String, Object> formatResults(HashMap<String, Object> results, List<?> data){
         results.put("data",data);

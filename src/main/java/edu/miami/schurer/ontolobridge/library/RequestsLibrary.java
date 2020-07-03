@@ -1,32 +1,58 @@
 package edu.miami.schurer.ontolobridge.library;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import edu.miami.schurer.ontolobridge.Responses.DebugStatusResponse;
 import edu.miami.schurer.ontolobridge.Responses.OperationResponse;
 import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
 import edu.miami.schurer.ontolobridge.utilities.DbUtil;
+import javassist.bytecode.stackmap.BasicBlock;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
+import javax.validation.constraints.Null;
+import java.util.*;
 
 public class RequestsLibrary {
 
-    static public int RequestsTerm(NamedParameterJdbcTemplate jdbcTemplate,
-                                       String label,
-                                       String description,
-                                       String uri_superclass,
-                                       String superclass_ontology,
-                                       String reference,
-                                       String justification,
-                                       String submitter,
-                                       String submitter_email,
-                                       boolean notify,
-                                       String requestType){
-        return RequestsTerm(jdbcTemplate.getJdbcTemplate(),label,description,uri_superclass,superclass_ontology,reference,justification,submitter,submitter_email,notify,"",requestType);
+    Random random = new Random();
+
+    @Value("${api.cpanel.apitoken}")
+    String cpanelApiKey;
+
+    JdbcTemplate jdbcTemplate;
+
+    public RequestsLibrary(JdbcTemplate template,String cpanelApiKey){
+        this.jdbcTemplate = template;
+        this.cpanelApiKey = cpanelApiKey;
     }
-    static public int RequestsTerm(JdbcTemplate jdbcTemplate,
-                                    String label,
+    private String genRandomEmail() {
+
+        String strAllowedCharacters =
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+        StringBuilder sbRandomString = new StringBuilder(10);
+
+        for(int i = 0 ; i < 10; i++){
+
+            //get random integer between 0 and string length
+            int randomInt = random.nextInt(strAllowedCharacters.length());
+
+            //get char from randomInt index from string and append in StringBuilder
+            sbRandomString.append( strAllowedCharacters.charAt(randomInt) );
+        }
+
+        return sbRandomString.toString()+"@ontolobridge.org";
+
+    }
+
+    public int RequestsTerm(String label,
                                     String description,
                                     String uri_superclass,
                                     String superclass_ontology,
@@ -34,9 +60,43 @@ public class RequestsLibrary {
                                     String justification,
                                     String submitter,
                                     String submitter_email,
+                                    boolean anonymize,
                                     boolean notify,
                                     String ontology,
                                     String requestType){
+        if(anonymize) {
+            String randomEmail = genRandomEmail(); //generate a random anonymous email
+            try{
+                String cpanelEmailRequests = "https://server201.web-hosting.com:2083/execute/Email/add_forwarder?domain=" +
+                        "ontolobridge.org&email=" +
+                        randomEmail +
+                        "&fwdopt=fwd&fwdemail=" +
+                        submitter_email;
+
+                HttpHeaders httpHeaders = new HttpHeaders();
+                httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+                httpHeaders.set("Authorization","cpanel "+cpanelApiKey);//authenticate with cpanel token
+
+                HttpEntity entity = new HttpEntity(httpHeaders);
+
+                RestTemplate restTemplate = new RestTemplate();
+                ResponseEntity<String> response =
+                        restTemplate.exchange(cpanelEmailRequests, HttpMethod.GET, entity,String.class); //request forwarder
+
+                String Response = response.getBody();
+                ObjectMapper objectMapper = new ObjectMapper();
+                HashMap myMap = objectMapper.readValue(Response, HashMap.class);
+                if(myMap.get("errors") != null){ //check if there is an error
+                    return -1;
+                }
+                submitter_email = randomEmail; //discard previous email
+                //JsonNode jsonMap = response.getBody();
+
+            }catch (Exception e){
+                System.out.println(e);
+                return 0;
+            }
+        }
         boolean isMySQL = DbUtil.isMySQL(jdbcTemplate);
         String sql = "INSERT INTO requests (" +
                 "label," +
@@ -119,7 +179,7 @@ public class RequestsLibrary {
         return id;
     }
 
-    static public List<StatusResponse> TermStatus(JdbcTemplate jdbcTemplate, Integer id,String include){
+    public List<StatusResponse> TermStatus(JdbcTemplate jdbcTemplate, Integer id,String include){
         String sql ="";
         //For deubgging
         if(include.equals("all"))
@@ -176,7 +236,7 @@ public class RequestsLibrary {
                         return new StatusResponse(rs.getString("submission_status"),id,uri,curie,rs.getString("current_message"),newURI,"",rs.getString("request_type"),rs.getTimestamp("updated_date").getTime(),rs.getDate("updated_date").toString());
                     });
     }
-    static public OperationResponse TermUpdateStatus(JdbcTemplate jdbcTemplate, Integer id, String status,String message){
+    public OperationResponse TermUpdateStatus(JdbcTemplate jdbcTemplate, Integer id, String status,String message){
         String sql = "UPDATE requests  SET  submission_status = ?::status, current_message = ? WHERE id = ?";
         List<Object> args = new ArrayList<>();
         args.add(status);

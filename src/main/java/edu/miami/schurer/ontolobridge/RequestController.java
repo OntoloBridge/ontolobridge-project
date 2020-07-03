@@ -1,6 +1,7 @@
 package edu.miami.schurer.ontolobridge;
 
 import edu.miami.schurer.ontolobridge.Responses.*;
+import edu.miami.schurer.ontolobridge.library.AuthLibrary;
 import edu.miami.schurer.ontolobridge.library.NotificationLibrary;
 import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import io.swagger.annotations.ApiParam;
@@ -36,16 +37,6 @@ public class RequestController extends BaseController {
     @Autowired
     public OntologyManagerService Manager;
 
-    @Autowired
-    private AppProperties appProp;
-
-    public NotificationLibrary notLib ;
-
-    @PostConstruct
-    void Init(){
-        notLib = new NotificationLibrary(appProp);
-    }
-
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successful requests",response = RequestResponse.class),
             @ApiResponse(code = 500, message = "Internal server error", response = ExceptionResponse.class)
@@ -60,10 +51,11 @@ public class RequestController extends BaseController {
                               @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
                               @ApiParam(value = "Name of the submitter if provided") @RequestParam(value="submitter",defaultValue = "") String submitter,
                               @ApiParam(value = "Email of the submitter") @RequestParam(value="email",defaultValue = "") String submitter_email,
+                              @ApiParam(value = "Anonymize Email") @RequestParam(value="anon",defaultValue = "false") boolean anonymize,
                               @ApiParam(value = "Ontology Request ") @RequestParam(value="ontology",defaultValue = "") String ontology,
                               @ApiParam(value = "Should submitter be notified of changes ") @RequestParam(value="notify",defaultValue = "false") boolean notify) {
 
-        Integer id = RequestsLibrary.RequestsTerm(JDBCTemplate, label,
+        Integer id =req.RequestsTerm(label,
                 description,
                 uri_superclass,
                 superclass_ontology,
@@ -71,6 +63,7 @@ public class RequestController extends BaseController {
                 justification,
                 submitter,
                 submitter_email,
+                anonymize,
                 notify,
                 ontology,
                 "term");
@@ -113,6 +106,7 @@ public class RequestController extends BaseController {
                               @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
                               @ApiParam(value = "Name of the submitter if provided") @RequestParam(value="submitter",defaultValue = "") String submitter,
                               @ApiParam(value = "Email of the submitter") @RequestParam(value="email",defaultValue = "") String submitter_email,
+                              @ApiParam(value = "Anonymize Email") @RequestParam(value="anon",defaultValue = "false") boolean anonymize,
                               @ApiParam(value = "Ontology Request ") @RequestParam(value="ontology",defaultValue = "") String ontology,
                               @ApiParam(value = "Should submitter be notified of changes ") @RequestParam(value="notify",defaultValue = "false") boolean notify) {
 
@@ -120,7 +114,7 @@ public class RequestController extends BaseController {
            return new ExceptionResponse("Label is required");
         if(description.length() == 0)
             return new ExceptionResponse("Description is required");
-        Integer id = RequestsLibrary.RequestsTerm(JDBCTemplate, label,
+        Integer id = req.RequestsTerm( label,
                 description,
                 uri_superclass,
                 superclass_ontology,
@@ -128,6 +122,7 @@ public class RequestController extends BaseController {
                 justification,
                 submitter,
                 submitter_email,
+                anonymize,
                 notify,
                 ontology,
                 "Data");
@@ -153,10 +148,11 @@ public class RequestController extends BaseController {
                                       @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
                                       @ApiParam(value = "Name of the submitter if provided") @RequestParam(value="submitter",defaultValue = "") String submitter,
                                       @ApiParam(value = "Email of the submitter") @RequestParam(value="email",defaultValue = "") String submitter_email,
+                                      @ApiParam(value = "Anonymize Email") @RequestParam(value="anon",defaultValue = "false") boolean anonymize,
                                       @ApiParam(value = "Ontology Request ") @RequestParam(value="ontology",defaultValue = "") String ontology,
                                       @ApiParam(value = "Should submitter be notified of changes ") @RequestParam(value="notify",defaultValue = "false") boolean notify) {
 
-        Integer id = RequestsLibrary.RequestsTerm(JDBCTemplate, label,
+        Integer id = req.RequestsTerm(label,
                 description,
                 uri_superclass,
                 superclass_ontology,
@@ -164,6 +160,7 @@ public class RequestController extends BaseController {
                 justification,
                 submitter,
                 submitter_email,
+                anonymize,
                 notify,
                 ontology,
                 "Object");
@@ -190,10 +187,11 @@ public class RequestController extends BaseController {
                                         @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
                                         @ApiParam(value = "Name of the submitter if provided") @RequestParam(value="submitter",defaultValue = "") String submitter,
                                         @ApiParam(value = "Email of the submitter") @RequestParam(value="email",defaultValue = "") String submitter_email,
+                                        @ApiParam(value = "Anonymize Email") @RequestParam(value="anon",defaultValue = "false") boolean anonymize,
                                         @ApiParam(value = "Ontology Request ") @RequestParam(value="ontology",defaultValue = "") String ontology,
                                         @ApiParam(value = "Should submitter be notified of changes ") @RequestParam(value="notify",defaultValue = "false") boolean notify) {
 
-        Integer id = RequestsLibrary.RequestsTerm(JDBCTemplate, label,
+        Integer id = req.RequestsTerm(label,
                 description,
                 uri_superclass,
                 superclass_ontology,
@@ -201,6 +199,7 @@ public class RequestController extends BaseController {
                 justification,
                 submitter,
                 submitter_email,
+                anonymize,
                 notify,
                 ontology,
                 "Annotation");
@@ -229,7 +228,7 @@ public class RequestController extends BaseController {
         if(activeProfile.equals("prod")){
             include="";
         }
-        List<StatusResponse> result = RequestsLibrary.TermStatus(JDBCTemplate, id,include);
+        List<StatusResponse> result = req.TermStatus(JDBCTemplate, id,include);
         if(result.size() == 1)
             return result.get(0);
         return result;
@@ -245,7 +244,7 @@ public class RequestController extends BaseController {
     public Object termStatus(@ApiParam(value = "ID of Forms" ,required = true) @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
-        return RequestsLibrary.TermUpdateStatus(JDBCTemplate, id,status,message);
+        return req.TermUpdateStatus(JDBCTemplate, id,status,message);
 
     }
 
@@ -258,7 +257,7 @@ public class RequestController extends BaseController {
     public Object updateTerm(@ApiParam(value = "ID of requests" ,required = true) @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
-        return RequestsLibrary.TermUpdateStatus(JDBCTemplate, id,status,message);
+        return req.TermUpdateStatus(JDBCTemplate, id,status,message);
 
     }
 }
