@@ -39,7 +39,7 @@ public class AuthLibrary {
     }*/
 
 /*
-    public List<StatusResponse> Register(String Username,String Password, String email){
+    public List<StatusResponse> Register(String Password, String email){
 
         String sql ="";
         //For deubgging
