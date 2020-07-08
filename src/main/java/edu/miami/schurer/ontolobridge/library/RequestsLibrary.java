@@ -64,118 +64,152 @@ public class RequestsLibrary {
                                     boolean notify,
                                     String ontology,
                                     String requestType){
-        if(anonymize) {
-            String randomEmail = genRandomEmail(); //generate a random anonymous email
-            try{
-                String cpanelEmailRequests = "https://server201.web-hosting.com:2083/execute/Email/add_forwarder?domain=" +
-                        "ontolobridge.org&email=" +
-                        randomEmail +
-                        "&fwdopt=fwd&fwdemail=" +
-                        submitter_email;
+        Integer id = null;
+        boolean addedEmail = false;
+        String emailDeleteTemp = "";
+        try {
+            if (anonymize) {
+                String randomEmail = genRandomEmail(); //generate a random anonymous email
+                try {
+                    String cpanelEmailRequests = "https://server201.web-hosting.com:2083/execute/Email/add_forwarder?domain=" +
+                            "ontolobridge.org&email=" +
+                            randomEmail +
+                            "&fwdopt=fwd&fwdemail=" +
+                            submitter_email;
+
+                    HttpHeaders httpHeaders = new HttpHeaders();
+                    httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+                    httpHeaders.set("Authorization", "cpanel " + cpanelApiKey);//authenticate with cpanel token
+
+                    HttpEntity entity = new HttpEntity(httpHeaders);
+
+                    RestTemplate restTemplate = new RestTemplate();
+                    ResponseEntity<String> response =
+                            restTemplate.exchange(cpanelEmailRequests, HttpMethod.GET, entity, String.class); //request forwarder
+                    String Response = response.getBody();
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    HashMap myMap = objectMapper.readValue(Response, HashMap.class);
+                    if (myMap.get("errors") != null) { //check if there is an error
+                        return -1;
+                    }
+                    addedEmail = true;
+                    emailDeleteTemp  =submitter_email;
+                    submitter_email = randomEmail; //discard previous email
+
+                    //JsonNode jsonMap = response.getBody();
+
+                } catch (Exception e) {
+                    System.out.println(e);
+                    return 0;
+                }
+            }
+            boolean isMySQL = DbUtil.isMySQL(jdbcTemplate);
+            String sql = "INSERT INTO requests (" +
+                    "label," +
+                    "description," +
+                    "uri_superclass," +
+                    "superclass_id," +
+                    "superclass_ontology," +
+                    "reference," +
+                    "justification," +
+                    "submitter," +
+                    "submitter_email," +
+                    "notify," +
+                    "request_type," +
+                    "uri_ontology" +
+                    ") VALUES (" +
+                    "?,?,?,?,?,?,?,?,?,?,?,?)";
+
+            if (!isMySQL) {
+                sql += " RETURNING id;";
+            }
+
+            List<Object> args = new ArrayList<>();
+            args.add(label);
+            args.add(description);
+
+            // uri_superclass
+            if (uri_superclass.contains("://")) {
+                args.add(uri_superclass);
+                if (uri_superclass.contains("#"))
+                    uri_superclass = uri_superclass.substring(uri_superclass.lastIndexOf("#") + 1);
+                else
+                    uri_superclass = uri_superclass.substring(uri_superclass.lastIndexOf("/") + 1);
+            } else {
+                args.add("");
+            }
+
+            // superclass_id
+            if (uri_superclass.contains("ONTB")) {
+                args.add(Integer.parseInt(uri_superclass.substring(uri_superclass.indexOf("ONTB") + 5)));
+            } else if (uri_superclass.contains("_")) {
+                args.add(Integer.parseInt(uri_superclass.substring(uri_superclass.indexOf("_") + 1)));
+            } else if (uri_superclass.contains(":")) {
+                args.add(Integer.parseInt(uri_superclass.substring(uri_superclass.indexOf(":") + 1)));
+            } else {
+                args.add(0);
+            }
+
+            //superclass_ontology
+            if (superclass_ontology.isEmpty()) {
+                if (uri_superclass.contains("ONTB")) {
+                    args.add(null);
+                } else if (uri_superclass.contains("_")) {
+                    args.add(uri_superclass.substring(0, uri_superclass.indexOf("_")));
+                } else if (uri_superclass.contains(":")) {
+                    args.add(uri_superclass.substring(0, uri_superclass.indexOf(":")));
+                } else {
+                    args.add(null);
+                }
+            } else {
+                args.add(superclass_ontology);
+            }
+
+            args.add(reference);
+            args.add(justification);
+            args.add(submitter);
+            args.add(submitter_email);
+            args.add(notify ? 1 : 0);
+            args.add(requestType);
+            args.add(ontology.isEmpty() ? "" : ontology);
+
+            if (isMySQL) {
+                jdbcTemplate.update(sql, args.toArray());
+                id = jdbcTemplate.queryForObject("select last_insert_id()", Integer.class);
+            } else {
+                id = jdbcTemplate.queryForObject(sql, args.toArray(), Integer.class);
+            }
+
+            jdbcTemplate.execute("insert into request_status (request_id,current_status) VALUES(" + id + ",'submitted')");
+        }catch (Exception e){
+            if(addedEmail){
+                String cpanelEmailRequests = "https://server201.web-hosting.com:2083/execute/Email/delete_forwarder?" +
+                        "address=" +
+                        submitter_email +
+                        "&forwarder=" +
+                        emailDeleteTemp;
 
                 HttpHeaders httpHeaders = new HttpHeaders();
                 httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-                httpHeaders.set("Authorization","cpanel "+cpanelApiKey);//authenticate with cpanel token
+                httpHeaders.set("Authorization", "cpanel " + cpanelApiKey);//authenticate with cpanel token
 
                 HttpEntity entity = new HttpEntity(httpHeaders);
 
                 RestTemplate restTemplate = new RestTemplate();
                 ResponseEntity<String> response =
-                        restTemplate.exchange(cpanelEmailRequests, HttpMethod.GET, entity,String.class); //request forwarder
-
+                        restTemplate.exchange(cpanelEmailRequests, HttpMethod.GET, entity, String.class); //request forwarder
                 String Response = response.getBody();
                 ObjectMapper objectMapper = new ObjectMapper();
-                HashMap myMap = objectMapper.readValue(Response, HashMap.class);
-                if(myMap.get("errors") != null){ //check if there is an error
-                    return -1;
+                try {
+                    HashMap myMap = objectMapper.readValue(Response, HashMap.class);
+                    if (myMap.get("errors") != null) { //check if there is an error
+                        return -1;
+                    }
+                }catch (Exception mapException){
+                    System.out.println(mapException);
                 }
-                submitter_email = randomEmail; //discard previous email
-                //JsonNode jsonMap = response.getBody();
-
-            }catch (Exception e){
-                System.out.println(e);
-                return 0;
             }
         }
-        boolean isMySQL = DbUtil.isMySQL(jdbcTemplate);
-        String sql = "INSERT INTO requests (" +
-                "label," +
-                "description," +
-                "uri_superclass," +
-                "superclass_id," +
-                "superclass_ontology," +
-                "reference," +
-                "justification," +
-                "submitter," +
-                "submitter_email," +
-                "notify," +
-                "request_type," +
-                "uri_ontology" +
-                ") VALUES ("+
-                "?,?,?,?,?,?,?,?,?,?,?,?)";
-
-        if (!isMySQL) {
-            sql += " RETURNING id;";
-        }
-
-        List<Object> args = new ArrayList<>();
-        args.add(label);
-        args.add(description);
-
-        // uri_superclass
-        if(uri_superclass.contains("://")){
-                args.add(uri_superclass);
-            if(uri_superclass.contains("#"))
-                uri_superclass = uri_superclass.substring(uri_superclass.lastIndexOf("#")+1);
-            else
-                uri_superclass = uri_superclass.substring(uri_superclass.lastIndexOf("/")+1);
-        }else{
-            args.add("");
-        }
-
-        // superclass_id
-        if (uri_superclass.contains("ONTB")) {
-            args.add(Integer.parseInt(uri_superclass.substring(uri_superclass.indexOf("ONTB")+5)));
-        }else if(uri_superclass.contains("_")){
-            args.add(Integer.parseInt(uri_superclass.substring(uri_superclass.indexOf("_")+1)));
-        }else if(uri_superclass.contains(":")){
-            args.add(Integer.parseInt(uri_superclass.substring(uri_superclass.indexOf(":")+1)));
-        }else {
-            args.add(0);
-        }
-
-        //superclass_ontology
-        if (superclass_ontology.isEmpty()) {
-            if (uri_superclass.contains("ONTB")) {
-                args.add(null);
-            }else if(uri_superclass.contains("_")){
-                args.add(uri_superclass.substring(0,uri_superclass.indexOf("_")));
-            }else if(uri_superclass.contains(":")){
-                args.add(uri_superclass.substring(0,uri_superclass.indexOf(":")));
-            }else {
-                args.add(null);
-            }
-        } else {
-            args.add(superclass_ontology);
-        }
-
-        args.add(reference);
-        args.add(justification);
-        args.add(submitter);
-        args.add(submitter_email);
-        args.add(notify?1:0);
-        args.add(requestType);
-        args.add(ontology.isEmpty()?"":ontology);
-        Integer id = null;
-
-        if (isMySQL) {
-            jdbcTemplate.update(sql, args.toArray());
-            id = jdbcTemplate.queryForObject("select last_insert_id()", Integer.class);
-        } else {
-            id = jdbcTemplate.queryForObject(sql, args.toArray(), Integer.class);
-        }
-
-        jdbcTemplate.execute("insert into request_status (request_id,current_status) VALUES("+id+",'submitted')");
         return id;
     }
 

@@ -4,6 +4,7 @@ import edu.miami.schurer.ontolobridge.Responses.*;
 import edu.miami.schurer.ontolobridge.library.AuthLibrary;
 import edu.miami.schurer.ontolobridge.library.NotificationLibrary;
 import edu.miami.schurer.ontolobridge.utilities.AppProperties;
+import edu.miami.schurer.ontolobridge.utilities.OntoloException;
 import io.swagger.annotations.ApiParam;
 import edu.miami.schurer.ontolobridge.library.RequestsLibrary;
 import io.swagger.annotations.ApiResponse;
@@ -53,7 +54,7 @@ public class RequestController extends BaseController {
                               @ApiParam(value = "Email of the submitter") @RequestParam(value="email",defaultValue = "") String submitter_email,
                               @ApiParam(value = "Anonymize Email") @RequestParam(value="anon",defaultValue = "false") boolean anonymize,
                               @ApiParam(value = "Ontology Request ") @RequestParam(value="ontology",defaultValue = "") String ontology,
-                              @ApiParam(value = "Should submitter be notified of changes ") @RequestParam(value="notify",defaultValue = "false") boolean notify) {
+                              @ApiParam(value = "Should submitter be notified of changes ") @RequestParam(value="notify",defaultValue = "false") boolean notify) throws OntoloException {
 
         Integer id =req.RequestsTerm(label,
                 description,
@@ -67,6 +68,8 @@ public class RequestController extends BaseController {
                 notify,
                 ontology,
                 "term");
+        if(id < 0)
+            throw new OntoloException("Error Making Requests");
         if(ontology != null && !ontology.isEmpty()){
             List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
             //queue notifications
