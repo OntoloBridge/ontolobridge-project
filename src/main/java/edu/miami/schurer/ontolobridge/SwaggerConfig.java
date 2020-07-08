@@ -37,7 +37,7 @@ public class SwaggerConfig extends WebMvcConfigurationSupport{
                 .pathProvider(new RelativePathProvider(servletContext) {
                     @Override
                     public String getApplicationBasePath() {
-                        if(!activeProfile.equals("prod"))
+                        if(activeProfile.equals("prod"))
                             return "/api";
                         else
                             return "/";

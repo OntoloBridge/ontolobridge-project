@@ -13,6 +13,8 @@ import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,6 +28,7 @@ import java.util.List;
 
 
 @RestController
+@PreAuthorize("isAuthenticated()")
 @RequestMapping("/requests")
 public class RequestController extends BaseController {
 
@@ -225,8 +228,9 @@ public class RequestController extends BaseController {
             @ApiResponse(code = 500, message = "Internal server error", response = ExceptionResponse.class)
     }
     )
+    @PreAuthorize("permitAll()")
     @RequestMapping(path="/RequestStatus", method= RequestMethod.GET)
-    public Object termStatus(@ApiParam(value = "ID of requests") @RequestParam(value="requestID",defaultValue = "0") Integer id,
+    public Object termStatus(@ApiParam(value = "ID of requests",example = "0") @RequestParam(value="requestID",defaultValue = "0") Integer id,
                              @ApiParam(hidden = true) @RequestParam(value="include",defaultValue = "0") String include){
         if(activeProfile.equals("prod")){
             include="";
@@ -244,7 +248,7 @@ public class RequestController extends BaseController {
     }
     )
     @RequestMapping(path="/RequestsSetStatus", method= RequestMethod.POST)
-    public Object termStatus(@ApiParam(value = "ID of Forms" ,required = true) @RequestParam(value="requestID") Integer id,
+    public Object termStatus(@ApiParam(value = "ID of Forms" ,required = true,example = "0") @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
         return req.TermUpdateStatus(JDBCTemplate, id,status,message);
@@ -257,7 +261,7 @@ public class RequestController extends BaseController {
     }
     )
     @RequestMapping(path="/UpdateRequests", method= RequestMethod.POST)
-    public Object updateTerm(@ApiParam(value = "ID of requests" ,required = true) @RequestParam(value="requestID") Integer id,
+    public Object updateTerm(@ApiParam(value = "ID of requests" ,required = true,example = "0") @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
         return req.TermUpdateStatus(JDBCTemplate, id,status,message);

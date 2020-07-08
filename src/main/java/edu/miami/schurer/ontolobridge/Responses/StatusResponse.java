@@ -10,7 +10,7 @@ public class StatusResponse {
     @ApiModelProperty( required = true, example = "submitted")
     public String status;
 
-    @ApiModelProperty( required = true, example = "submitted")
+    @ApiModelProperty( required = true, example = "1")
     public int request_id;
 
     @ApiModelProperty( required = true, example = "http://dev3.ccs.miami.edu:8080/ontolobridge/ONTB_25")
@@ -28,10 +28,10 @@ public class StatusResponse {
     @ApiModelProperty( required = false, example = "BAO_25")
     public String curie;
 
-    @ApiModelProperty( required = false, example = "2018-11-05 16:32:13.442207")
+    @ApiModelProperty( required = false, example = "16748786")
     public long timestamp;
 
-    @ApiModelProperty( required = false, example = "16748786")
+    @ApiModelProperty( required = false, example = "2018-11-05 16:32:13.442207")
     public String datetime;
 
     @ApiModelProperty( required = false, example = "Term")

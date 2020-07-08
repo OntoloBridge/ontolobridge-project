@@ -22,9 +22,6 @@ import org.hibernate.annotations.NaturalId;
 @Entity
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = {
-                "username"
-        }),
-        @UniqueConstraint(columnNames = {
                 "email"
         })
 })
@@ -37,10 +34,6 @@ public class User{
     @Size(min=3, max = 50)
     private String name;
 
-    @NotBlank
-    @Size(min=3, max = 50)
-    private String username;
-
     @NaturalId
     @NotBlank
     @Size(max = 50)
@@ -51,6 +44,9 @@ public class User{
     @Size(min=6, max = 100)
     private String password;
 
+    private boolean verified;
+
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -59,11 +55,11 @@ public class User{
 
     public User() {}
 
-    public User(String name, String username, String email, String password) {
+    public User(String name, String email, String password) {
         this.name = name;
-        this.username = username;
         this.email = email;
         this.password = password;
+        verified = false;
     }
 
     public Long getId() {
@@ -72,14 +68,6 @@ public class User{
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getName() {
@@ -113,4 +101,14 @@ public class User{
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+
 }
