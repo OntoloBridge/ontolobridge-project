@@ -1,29 +1,18 @@
 package edu.miami.schurer.ontolobridge;
 
 import edu.miami.schurer.ontolobridge.Responses.*;
-import edu.miami.schurer.ontolobridge.library.AuthLibrary;
 import edu.miami.schurer.ontolobridge.library.NotificationLibrary;
-import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import edu.miami.schurer.ontolobridge.utilities.OntoloException;
-import io.swagger.annotations.ApiParam;
-import edu.miami.schurer.ontolobridge.library.RequestsLibrary;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import org.apache.commons.io.IOUtils;
+import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotBlank;
-import java.awt.image.ImagingOpException;
-import java.io.IOException;
 import java.util.List;
 
 
@@ -47,9 +36,10 @@ public class RequestController extends BaseController {
         }
     )
     @RequestMapping(path="/RequestTerm", method= RequestMethod.POST)
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public Object requestTerm(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") @NotBlank String label,
                               @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") @NotBlank String description,
-                              @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") @NotBlank String uri_superclass,
+                              @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="parent_uri") @NotBlank String uri_superclass,
                               @ApiParam(value = "Superclass ontology of suggested term") @RequestParam(value="superclass_ontology", defaultValue = "") String superclass_ontology,
                               @ApiParam(value = "Any references for this requests") @RequestParam(value="reference",defaultValue = "") @NotBlank String reference,
                               @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
@@ -83,7 +73,7 @@ public class RequestController extends BaseController {
 
 
         if(submitter_email != null && notify){
-            notLib.InsertEmail(JDBCTemplate,
+            notLib.InsertTermEmail(JDBCTemplate,
                     "/emails/termSubmission.email",
                     label,
                     description,
@@ -104,9 +94,10 @@ public class RequestController extends BaseController {
     }
 
     @RequestMapping(path="/RequestDataProperty", method= RequestMethod.POST)
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public Object requestDataProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
                               @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
-                              @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") String uri_superclass,
+                              @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="parent_uri") String uri_superclass,
                               @ApiParam(value = "Superclass ontology of suggested term") @RequestParam(value="superclass_ontology", defaultValue = "") String superclass_ontology,
                               @ApiParam(value = "Any references for this requests") @RequestParam(value="reference",defaultValue = "") String reference,
                               @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
@@ -146,9 +137,10 @@ public class RequestController extends BaseController {
     }
 
     @RequestMapping(path="/RequestObjectProperty", method= RequestMethod.POST)
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public Object requestObjectProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
                                       @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
-                                      @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") String uri_superclass,
+                                      @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="parent_uri") String uri_superclass,
                                       @ApiParam(value = "Superclass ontology of suggested term") @RequestParam(value="superclass_ontology", defaultValue = "") String superclass_ontology,
                                       @ApiParam(value = "Any references for this requests") @RequestParam(value="reference",defaultValue = "") String reference,
                                       @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
@@ -185,9 +177,10 @@ public class RequestController extends BaseController {
     }
 
     @RequestMapping(path="/RequestAnnotationProperty", method= RequestMethod.POST)
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public Object requestAnnotationProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
                                         @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
-                                        @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="superclass") String uri_superclass,
+                                        @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="parent_uri") String uri_superclass,
                                         @ApiParam(value = "Superclass ontology of suggested term") @RequestParam(value="superclass_ontology", defaultValue = "") String superclass_ontology,
                                         @ApiParam(value = "Any references for this requests") @RequestParam(value="reference",defaultValue = "") String reference,
                                         @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
@@ -229,6 +222,7 @@ public class RequestController extends BaseController {
     }
     )
     @PreAuthorize("permitAll()")
+    //@ApiOperation(value = "", authorizations = { })
     @RequestMapping(path="/RequestStatus", method= RequestMethod.GET)
     public Object termStatus(@ApiParam(value = "ID of requests",example = "0") @RequestParam(value="requestID",defaultValue = "0") Integer id,
                              @ApiParam(hidden = true) @RequestParam(value="include",defaultValue = "0") String include){
@@ -248,6 +242,7 @@ public class RequestController extends BaseController {
     }
     )
     @RequestMapping(path="/RequestsSetStatus", method= RequestMethod.POST)
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public Object termStatus(@ApiParam(value = "ID of Forms" ,required = true,example = "0") @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
@@ -261,6 +256,7 @@ public class RequestController extends BaseController {
     }
     )
     @RequestMapping(path="/UpdateRequests", method= RequestMethod.POST)
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public Object updateTerm(@ApiParam(value = "ID of requests" ,required = true,example = "0") @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){

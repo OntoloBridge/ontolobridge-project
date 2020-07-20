@@ -19,6 +19,8 @@ import org.springframework.web.client.RestTemplate;
 import javax.validation.constraints.Null;
 import java.util.*;
 
+import static edu.miami.schurer.ontolobridge.utilities.DbUtil.genRandomString;
+
 public class RequestsLibrary {
 
     Random random = new Random();
@@ -33,23 +35,7 @@ public class RequestsLibrary {
         this.cpanelApiKey = cpanelApiKey;
     }
     private String genRandomEmail() {
-
-        String strAllowedCharacters =
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-        StringBuilder sbRandomString = new StringBuilder(10);
-
-        for(int i = 0 ; i < 10; i++){
-
-            //get random integer between 0 and string length
-            int randomInt = random.nextInt(strAllowedCharacters.length());
-
-            //get char from randomInt index from string and append in StringBuilder
-            sbRandomString.append( strAllowedCharacters.charAt(randomInt) );
-        }
-
-        return sbRandomString.toString()+"@ontolobridge.org";
-
+        return genRandomString(10)+"@ontolobridge.org";
     }
 
     public int RequestsTerm(String label,

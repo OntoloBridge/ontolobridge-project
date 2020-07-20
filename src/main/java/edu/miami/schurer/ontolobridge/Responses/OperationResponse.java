@@ -14,9 +14,9 @@ public class OperationResponse {
     public boolean success;
 
     @ApiModelProperty( required = true, example = "25")
-    public int requests_id;
+    public long requests_id;
 
-    public OperationResponse(String status, boolean success, int requestsID) {
+    public OperationResponse(String status, boolean success, long requestsID) {
         this.status = status;
         this.success = success;
         this.requests_id = requestsID;

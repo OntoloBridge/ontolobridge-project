@@ -1,9 +1,12 @@
 package edu.miami.schurer.ontolobridge.utilities;
 
+import org.springframework.http.HttpStatus;
+
 public class OntoloException extends Exception {
 
 
-    private Integer statusCode = 500;
+    private HttpStatus statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+    private Integer errorCode = 500;
     // Parameterless Constructor
     public OntoloException() {}
 
@@ -13,13 +16,27 @@ public class OntoloException extends Exception {
         super(message);
     }
     // Constructor that accepts a message
-    public OntoloException(String message, Integer code)
+    public OntoloException(String message, HttpStatus code)
     {
         super(message);
         this.statusCode=code;
     }
+    public OntoloException(String message, Integer code)
+    {
+        super(message);
+        this.errorCode=code;
+    }
+    public OntoloException(String message,Integer ecode, HttpStatus code)
+    {
+        super(message);
+        this.statusCode=code;
+        this.errorCode=ecode;
+    }
 
-    public Integer getStatusCode() {
+    public Integer getErrorCode() {
+        return errorCode;
+    }
+    public HttpStatus getStatusCode() {
         return statusCode;
     }
 }

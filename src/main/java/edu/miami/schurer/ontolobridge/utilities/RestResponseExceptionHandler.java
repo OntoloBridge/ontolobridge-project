@@ -4,6 +4,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -24,12 +25,17 @@ public class RestResponseExceptionHandler extends ResponseEntityExceptionHandler
     }
     @ExceptionHandler(OntoloException.class)
     ResponseEntity<Object> handleOntoloException(HttpServletRequest req, OntoloException ex) {
-        return generateResponse(ex.getStatusCode(),ex.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        return generateResponse(ex.getErrorCode(),ex.getMessage(),ex.getStatusCode());
     }
     @ExceptionHandler(AccessDeniedException.class)
     ResponseEntity<Object> handleAccessException(HttpServletRequest req, AccessDeniedException ex) {
         //return a server error
         return generateResponse(403,ex.getMessage(),HttpStatus.UNAUTHORIZED);
+    }
+    @ExceptionHandler(BadCredentialsException.class)
+    ResponseEntity<Object> handleAccessException(HttpServletRequest req, BadCredentialsException ex) {
+        //return a server error
+        return generateResponse(403,"Invalid email or password",HttpStatus.UNAUTHORIZED);
     }
 
     //code to generate common message for all exceptions
