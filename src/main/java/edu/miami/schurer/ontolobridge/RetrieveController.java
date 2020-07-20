@@ -4,9 +4,7 @@ import com.opencsv.CSVWriter;
 import edu.miami.schurer.ontolobridge.Responses.ExceptionResponse;
 import edu.miami.schurer.ontolobridge.Responses.RequestResponse;
 import edu.miami.schurer.ontolobridge.utilities.OntoloException;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +33,7 @@ public class RetrieveController extends BaseController {
     }
     )
     @RequestMapping(path="/Requests", method= RequestMethod.GET)
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public @ResponseBody ResponseEntity requestTerm(@ApiParam(value = "Ontology to get new terms for" ,required = true) @RequestParam(value="ontology") String ontology,
                                @ApiParam(value = "Minimum status to return",defaultValue = " ",required = false) @RequestParam(value="status") String status,
                                @ApiParam(value = "Type of request to return to return",defaultValue = " ",required = false) @RequestParam(value="type") String type ) throws OntoloException {
@@ -51,36 +50,34 @@ public class RetrieveController extends BaseController {
         Set<String> keys = new LinkedHashSet<>();
         JDBCTemplate.query(sql,
                 args.toArray(),
-                new RowMapper<Object>() {
-                   public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
-                       ResultSetMetaData metadata = rs.getMetaData();
-                       HashMap<String, String> array = new HashMap<>();
-                       array.put("termType", "new " + rs.getString("request_type"));
-                       if (rowNum == 1)
-                           keys.add("termType");
-                       for (int i = 1; i <= metadata.getColumnCount(); i++) {
-                           if (metadata.getColumnName(i).equals("uri_superclass") && rowNum != 1) {
-                               keys.add("superclass_label");
-                               keys.add("superclass");
-                           }
-                           if (metadata.getColumnName(i).contains("superclass"))
-                               continue;
-                           array.put(metadata.getColumnName(i), rs.getString(i));
-                           if (rowNum != 1)
-                               keys.add(metadata.getColumnName(i));
-                       }
-                       if (rs.getString("uri_superclass") != null && !rs.getString("uri_superclass").isEmpty())
-                           array.put("superclass", rs.getString("uri_superclass"));
-                       else if (rs.getString("superclass_ontology") != null && !rs.getString("superclass_ontology").isEmpty() && rs.getString("superclass_id") != null && !rs.getString("superclass_id").isEmpty())
-                           array.put("superclass", rs.getString("superclass_ontology") + "_" + rs.getString("superclass_id"));
-                       else if (rs.getString("superclass_id") != null && isInteger(rs.getString("superclass_id")))
-                           array.put("superclass", "ONTB_" + rs.getString("superclass_id"));
-                       else
-                           array.put("superclass", "");
-                       termMap.put("ONTB_" + rs.getString("id"), array);
-                       return 0;
+                (RowMapper<Object>) (rs, rowNum) -> {
+                    ResultSetMetaData metadata = rs.getMetaData();
+                    HashMap<String, String> array = new HashMap<>();
+                    array.put("termType", "new " + rs.getString("request_type"));
+                    if (rowNum == 1)
+                        keys.add("termType");
+                    for (int i = 1; i <= metadata.getColumnCount(); i++) {
+                        if (metadata.getColumnName(i).equals("uri_superclass") && rowNum != 1) {
+                            keys.add("superclass_label");
+                            keys.add("superclass");
+                        }
+                        if (metadata.getColumnName(i).contains("superclass"))
+                            continue;
+                        array.put(metadata.getColumnName(i), rs.getString(i));
+                        if (rowNum != 1)
+                            keys.add(metadata.getColumnName(i));
                     }
-                });
+                    if (rs.getString("uri_superclass") != null && !rs.getString("uri_superclass").isEmpty())
+                        array.put("superclass", rs.getString("uri_superclass"));
+                    else if (rs.getString("superclass_ontology") != null && !rs.getString("superclass_ontology").isEmpty() && rs.getString("superclass_id") != null && !rs.getString("superclass_id").isEmpty())
+                        array.put("superclass", rs.getString("superclass_ontology") + "_" + rs.getString("superclass_id"));
+                    else if (rs.getString("superclass_id") != null && isInteger(rs.getString("superclass_id")))
+                        array.put("superclass", "ONTB_" + rs.getString("superclass_id"));
+                    else
+                        array.put("superclass", "");
+                    termMap.put("ONTB_" + rs.getString("id"), array);
+                    return 0;
+                 });
         List<Object> outList = new ArrayList<>();
         int i = 0;
         //loop through excess array and get only those that don't have a parent still in the array and add them to the end of output

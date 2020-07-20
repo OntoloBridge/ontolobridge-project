@@ -18,13 +18,10 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -227,7 +224,7 @@ public class OntologyManagerService {
             for (MaintainersObject m : maintainers) {
                 E.put("submitter_email",m.getContact_location());
                 E.put("submitter","Maintainer");
-                notLib.InsertEmail(JDBCTemplate,"/emails/termSubmission.email",E);
+                notLib.InsertTermEmail(JDBCTemplate,"/emails/termSubmission.email",E);
                 //NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new " + E.get("type") + " has been submitted", "New " + E.get("type") + " Forms");
             }
         }
