@@ -2,9 +2,9 @@
 name: OntoloBridge-BioPortal Error Reporting
 about: For troubleshooting and reporting BioPortal errors associated with the OntoloBridge
   project.
-title: ''
-labels: ''
-assignees: ''
+title: "[Bioportal-Ontolobridge Server Error]"
+labels: bug, server error
+assignees: graybeal, mdorf
 
 ---
 
