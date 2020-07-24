@@ -4,11 +4,11 @@ about: For troubleshooting and reporting BioPortal errors associated with the On
   project.
 title: "[Bioportal-Ontolobridge Server Error]"
 labels: bug, server error
-assignees: graybeal, mdorf
+assignees: ''
 
 ---
 
-*Questions marked with + are required. If multiple people are involved in troubleshooting, please indicate the actions each has taken.*
+*Questions marked with + are required. If multiple people are involved in troubleshooting, please indicate the actions each has taken. BioPortal team should only be assigned once Question #5 is answered*
 
 **1. Date of system outage +**
 
@@ -22,7 +22,7 @@ assignees: graybeal, mdorf
 
 
 
-**4. What behavior occurred on developer system? How was it different than expected? +**
+**4. What behavior occurred on developer system? How was it different than expected? **
 
 
 
