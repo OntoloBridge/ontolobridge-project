@@ -10,11 +10,11 @@ import java.util.HashMap;
 import java.util.List;
 
 @RestController
-@RequestMapping("/auth")
+//@RequestMapping("/auth")
 public class AuthController extends BaseController {
 
     //Redirect the root request to swagger page
-    @RequestMapping("/register")
+   // @RequestMapping("/register")
     public void method(HttpServletResponse httpServletResponse) {
         httpServletResponse.setHeader("Location", "swagger-ui.html");
         httpServletResponse.setStatus(302);

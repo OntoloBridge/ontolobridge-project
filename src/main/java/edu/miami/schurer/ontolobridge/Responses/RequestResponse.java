@@ -9,7 +9,7 @@ public class RequestResponse {
     @ApiModelProperty( required = true, example = "25")
     public Integer requestID;
 
-    @ApiModelProperty( required = true, example = "http://dev3.ccs.miami.edu:8080/ontolobridge/ONTB_25")
+    @ApiModelProperty( required = true, example = "http://ontolobridge.ccs.miami.edu/ONTB_25")
     public String provisional_uri;
 
     @ApiModelProperty( required = true, example = "ONTB_25")
