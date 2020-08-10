@@ -257,7 +257,7 @@ public class RequestController extends BaseController {
     }
     )
     @RequestMapping(path="/UpdateRequests", method= RequestMethod.POST)
-    public Object updateTerm(@ApiParam(value = "ID of requests" ,required = true) @RequestParam(value="requestID") Integer id,
+    public Object updateTerm(@ApiParam(value = "ID of requests",example = "0",required = true) @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
         return req.TermUpdateStatus(JDBCTemplate, id,status,message);
