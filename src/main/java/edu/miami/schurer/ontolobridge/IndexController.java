@@ -15,6 +15,6 @@ public class IndexController {
     }
     @RequestMapping("/csrf")
     public void csrf(HttpServletResponse httpServletResponse) {
-        httpServletResponse.setStatus(400);
+        httpServletResponse.setStatus(200);
     }
 }
