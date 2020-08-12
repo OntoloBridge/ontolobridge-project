@@ -263,9 +263,4 @@ public class RequestController extends BaseController {
         return req.TermUpdateStatus(JDBCTemplate, id,status,message);
 
     }
-
-    @RequestMapping(path="/error", method= RequestMethod.POST)
-    public Object error() throws OntoloException{
-        throw new OntoloException("Sentry Test");
-    }
 }

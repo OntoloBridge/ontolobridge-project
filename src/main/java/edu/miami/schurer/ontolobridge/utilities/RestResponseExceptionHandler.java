@@ -1,5 +1,6 @@
 package edu.miami.schurer.ontolobridge.utilities;
 
+import org.apache.logging.log4j.LogManager;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +13,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @ControllerAdvice
 public class RestResponseExceptionHandler extends ResponseEntityExceptionHandler {
-
     @ExceptionHandler(Throwable.class)
     ResponseEntity<Object> handleControllerException(HttpServletRequest req, Throwable ex) {
 
@@ -23,7 +24,7 @@ public class RestResponseExceptionHandler extends ResponseEntityExceptionHandler
         Map<String,Object> responseBody = new HashMap<>();
         responseBody.put("error",500);
         responseBody.put("message","An Internal Error Has Occured");
-
+        logger.error("Exception caught", ex);
         //return a server error
         return new ResponseEntity<Object>(responseBody,HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -34,7 +35,7 @@ public class RestResponseExceptionHandler extends ResponseEntityExceptionHandler
         Map<String,Object> responseBody = new HashMap<>();
         responseBody.put("error",ex.getStatusCode());
         responseBody.put("message",ex.getMessage());
-
+        logger.error("Exception caught", ex);
         //return a server error
         return new ResponseEntity<Object>(responseBody,HttpStatus.INTERNAL_SERVER_ERROR);
     }

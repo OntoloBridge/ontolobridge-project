@@ -13,4 +13,8 @@ public class IndexController {
         httpServletResponse.setHeader("Location", "swagger-ui.html");
         httpServletResponse.setStatus(302);
     }
+    @RequestMapping("/csrf")
+    public void csrf(HttpServletResponse httpServletResponse) {
+        httpServletResponse.setStatus(400);
+    }
 }

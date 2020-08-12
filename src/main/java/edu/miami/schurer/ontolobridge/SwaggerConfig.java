@@ -50,7 +50,7 @@ public class SwaggerConfig extends WebMvcConfigurationSupport{
         if(!activeProfile.equals("dev")){
             dock = dock.paths(Predicates.not(Predicates.or(PathSelectors.ant("/frontend/*"),PathSelectors.ant("/"))));
         }else{
-            dock = dock.paths(Predicates.not(PathSelectors.ant("/")));
+            dock = dock.paths(Predicates.not(Predicates.or(PathSelectors.ant("/"),PathSelectors.ant("/csrf"))));
         }
         return dock.build()
                 .apiInfo(apiInfo())
