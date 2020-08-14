@@ -23,11 +23,11 @@
         <appender-ref ref="Console" />
         <appender-ref ref="Sentry" />
     </root>
-    <logger name="org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver" level="ERROR">
+    <logger name="org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver" level="error">
         <appender-ref ref="Console"/>
         <appender-ref ref="Sentry" />
     </logger>
-    <logger name="o.s.web.servlet.PageNotFound" level="ERROR">
+    <logger name="o.s.web.servlet.PageNotFound" level="error">
         <appender-ref ref="Console"/>
         <appender-ref ref="Sentry" />
     </logger>
