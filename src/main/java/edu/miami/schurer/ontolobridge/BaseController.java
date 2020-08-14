@@ -11,6 +11,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BaseController {
 
@@ -34,6 +36,11 @@ public class BaseController {
         notLib = new NotificationLibrary(appProp);
         auth = new AuthLibrary(JDBCTemplate);
         req = new RequestsLibrary(JDBCTemplate,cpanelApiKey);
+        Logger logger = Logger.getLogger("org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver");
+        logger.setLevel(Level.SEVERE);
+
+        logger = Logger.getLogger("org.springframework.web.servlet.PageNotFound");
+        logger.setLevel(Level.SEVERE);
     }
 
     protected HashMap<String, Object> formatResults(HashMap<String, Object> results, List<?> data){
