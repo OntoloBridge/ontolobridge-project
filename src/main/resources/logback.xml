@@ -27,7 +27,7 @@
         <appender-ref ref="Console"/>
         <appender-ref ref="Sentry" />
     </logger>
-    <logger name="o.s.web.servlet.PageNotFound" level="error">
+    <logger name="org.springframework.web.servlet.PageNotFound" level="error">
         <appender-ref ref="Console"/>
         <appender-ref ref="Sentry" />
     </logger>
