@@ -1,5 +1,6 @@
 package edu.miami.schurer.ontolobridge.utilities;
 
+import io.sentry.Sentry;
 import org.apache.logging.log4j.LogManager;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -24,7 +25,8 @@ public class RestResponseExceptionHandler extends ResponseEntityExceptionHandler
         Map<String,Object> responseBody = new HashMap<>();
         responseBody.put("error",500);
         responseBody.put("message","An Internal Error Has Occured");
-        logger.error("Exception caught", ex);
+        Sentry.capture(ex);
+        logger.info("Exception Caught",ex);
         //return a server error
         return new ResponseEntity<Object>(responseBody,HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -35,7 +37,8 @@ public class RestResponseExceptionHandler extends ResponseEntityExceptionHandler
         Map<String,Object> responseBody = new HashMap<>();
         responseBody.put("error",ex.getStatusCode());
         responseBody.put("message",ex.getMessage());
-        logger.error("Exception caught", ex);
+        Sentry.capture(ex);
+        logger.info("Exception Caught",ex);
         //return a server error
         return new ResponseEntity<Object>(responseBody,HttpStatus.INTERNAL_SERVER_ERROR);
     }

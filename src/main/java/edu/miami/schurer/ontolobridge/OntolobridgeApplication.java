@@ -16,12 +16,4 @@ public class OntolobridgeApplication {
     public static void main(String[] args) {
         SpringApplication.run(OntolobridgeApplication.class, args);
     }
-    @Bean
-    public HandlerExceptionResolver sentryExceptionResolver() {
-        return new io.sentry.spring.SentryExceptionResolver();
-    }
-    @Bean
-    public ServletContextInitializer sentryServletContextInitializer() {
-        return new io.sentry.spring.SentryServletContextInitializer();
-    }
 }
