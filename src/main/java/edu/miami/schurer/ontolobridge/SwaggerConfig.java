@@ -37,7 +37,7 @@ public class SwaggerConfig extends WebMvcConfigurationSupport{
                 .pathProvider(new RelativePathProvider(servletContext) {
                     @Override
                     public String getApplicationBasePath() {
-                        if(!activeProfile.equals("prod"))
+                        if(activeProfile.equals("prod"))
                             return "/api";
                         else
                             return "/";
@@ -48,7 +48,7 @@ public class SwaggerConfig extends WebMvcConfigurationSupport{
                 .apis(RequestHandlerSelectors.basePackage("edu.miami.schurer.ontolobridge"))
                 .paths(PathSelectors.any());
         if(!activeProfile.equals("dev")){
-            dock = dock.paths(Predicates.not(Predicates.or(PathSelectors.ant("/frontend/*"),PathSelectors.ant("/"))));
+            dock = dock.paths(Predicates.not(Predicates.or(PathSelectors.ant("/frontend/*"),PathSelectors.ant("/"),PathSelectors.ant("/csrf"))));
         }else{
             dock = dock.paths(Predicates.not(Predicates.or(PathSelectors.ant("/"),PathSelectors.ant("/csrf"))));
         }

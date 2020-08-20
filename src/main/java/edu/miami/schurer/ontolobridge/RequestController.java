@@ -46,7 +46,7 @@ public class RequestController extends BaseController {
     @RequestMapping(path="/RequestTerm", method= RequestMethod.POST)
     public Object requestTerm(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") @NotBlank String label,
                               @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") @NotBlank String description,
-                              @ApiParam(value = "Parent URI of suggested term",required = true) @RequestParam(value="parent_uri") @NotBlank String uri_superclass,
+                              @ApiParam(value = "Parent URI of suggested term",required = true) @RequestParam(value="superclass") @NotBlank String uri_superclass,
                               @ApiParam(value = "Parent URI ontology of suggested term") @RequestParam(value="superclass_ontology", defaultValue = "") String superclass_ontology,
                               @ApiParam(value = "Any references for this requests") @RequestParam(value="reference",defaultValue = "") @NotBlank String reference,
                               @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
@@ -103,7 +103,7 @@ public class RequestController extends BaseController {
     @RequestMapping(path="/RequestDataProperty", method= RequestMethod.POST)
     public Object requestDataProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
                               @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
-                              @ApiParam(value = "Parent URI of suggested term",required = true) @RequestParam(value="parent_uri") String uri_superclass,
+                              @ApiParam(value = "Parent URI of suggested term",required = true) @RequestParam(value="superclass") String uri_superclass,
                               @ApiParam(value = "Parent URI ontology of suggested term") @RequestParam(value="superclass_ontology", defaultValue = "") String superclass_ontology,
                               @ApiParam(value = "Any references for this requests") @RequestParam(value="reference",defaultValue = "") String reference,
                               @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
@@ -145,7 +145,7 @@ public class RequestController extends BaseController {
     @RequestMapping(path="/RequestObjectProperty", method= RequestMethod.POST)
     public Object requestObjectProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
                                       @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
-                                      @ApiParam(value = "Parent URI of suggested term",required = true) @RequestParam(value="parent_uri") String uri_superclass,
+                                      @ApiParam(value = "Parent URI of suggested term",required = true) @RequestParam(value="superclass") String uri_superclass,
                                       @ApiParam(value = "Parent URI ontology of suggested term") @RequestParam(value="superclass_ontology", defaultValue = "") String superclass_ontology,
                                       @ApiParam(value = "Any references for this requests") @RequestParam(value="reference",defaultValue = "") String reference,
                                       @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
@@ -184,7 +184,7 @@ public class RequestController extends BaseController {
     @RequestMapping(path="/RequestAnnotationProperty", method= RequestMethod.POST)
     public Object requestAnnotationProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
                                         @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
-                                        @ApiParam(value = "Parent URI of suggested term",required = true) @RequestParam(value="parent_uri") String uri_superclass,
+                                        @ApiParam(value = "Parent URI of suggested term",required = true) @RequestParam(value="superclass") String uri_superclass,
                                         @ApiParam(value = "Parent URI ontology of suggested term") @RequestParam(value="superclass_ontology", defaultValue = "") String superclass_ontology,
                                         @ApiParam(value = "Any references for this requests") @RequestParam(value="reference",defaultValue = "") String reference,
                                         @ApiParam(value = "Justification if any for adding this term") @RequestParam(value="justification",defaultValue = "") String justification,
