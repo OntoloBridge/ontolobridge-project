@@ -31,6 +31,9 @@ public class RequestsLibrary {
     @Value("${spring.datasource.url}")
     String connectionURL;
 
+    @Value("${app.mysql}")
+    String isMYSQL;
+
     public RequestsLibrary(JdbcTemplate template,String cpanelApiKey){
         this.jdbcTemplate = template;
         this.cpanelApiKey = cpanelApiKey;
@@ -100,7 +103,7 @@ public class RequestsLibrary {
                 return 0;
             }
         }
-        boolean isMySQL = connectionURL.contains("mysql");
+        boolean isMySQL = isMYSQL;
         String sql = "INSERT INTO requests (" +
                 "label," +
                 "description," +
