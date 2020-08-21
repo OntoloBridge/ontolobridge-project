@@ -5,6 +5,7 @@ import edu.miami.schurer.ontolobridge.Responses.OperationResponse;
 import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
 import edu.miami.schurer.ontolobridge.Responses.UserResponse;
 import edu.miami.schurer.ontolobridge.utilities.DbUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
@@ -15,6 +16,9 @@ import java.util.Map;
 public class AuthLibrary {
 
     JdbcTemplate jdbcTemplate;
+
+    @Value("${spring.datasource.url}")
+    String connectionURL;
 
     public AuthLibrary(JdbcTemplate template){
         this.jdbcTemplate = template;

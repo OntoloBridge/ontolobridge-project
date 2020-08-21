@@ -3,6 +3,7 @@ package edu.miami.schurer.ontolobridge.library;
 import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import edu.miami.schurer.ontolobridge.utilities.DbUtil;
 import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -17,18 +18,21 @@ public class NotificationLibrary {
 
     private AppProperties appProp;
 
+    @Value("${spring.datasource.url}")
+    String connectionURL;
+
     public NotificationLibrary(AppProperties appProp) {
         this.appProp = appProp;
     }
 
-    static public int InsertNotification(JdbcTemplate jdbcTemplate,
+    public int InsertNotification(JdbcTemplate jdbcTemplate,
                                          String notificationMethod,
                                          String address,
                                          String message,
                                          String title){
         List<Object> args = new ArrayList<>();
         String sql = "insert into notifications (notification_method,address,message,title,created_date) values (?,?,?,?,current_date)";
-        boolean isMySQL = DbUtil.isMySQL(jdbcTemplate);
+        boolean isMySQL = connectionURL.contains("mysql");
 
         if (!isMySQL) {
             sql += " RETURNING id;";

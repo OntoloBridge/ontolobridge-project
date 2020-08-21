@@ -73,8 +73,9 @@ public class RequestController extends BaseController {
         if(ontology != null && !ontology.isEmpty()){
             List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
             //queue notifications
+            //todo:REPLACE WITH SUBMISSION EMAIL
             for (MaintainersObject m : maintainers) {
-                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new term has been submitted", "New term Forms");
+                notLib.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new term has been submitted", "New term Forms");
             }
         }
 
@@ -91,9 +92,8 @@ public class RequestController extends BaseController {
                     submitter_email,
                     "term",
                     id.toString());
-            notifier.sendEmailNotification(submitter_email,"Received Term Request","Hello "+submitter+"\n\n We have received your request for "+label+" and appropriate maintainers notified");
+            //notifier.sendEmailNotification(submitter_email,"Received Term Request","Hello "+submitter+"\n\n We have received your request for "+label+" and appropriate maintainers notified");
         }
-
 
         return new RequestResponse(id,
                 "http://ontolobridge.ccs.miami.edu/ONTB_"+String.format("%9d",id).replace(' ','0'),
@@ -134,7 +134,7 @@ public class RequestController extends BaseController {
             List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
             //queue notifications
             for (MaintainersObject m : maintainers) {
-                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new data property has been submitted", "New data property Forms");
+                notLib.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new data property has been submitted", "New data property Forms");
             }
         }
         return new RequestResponse(id,
@@ -172,7 +172,7 @@ public class RequestController extends BaseController {
             List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
             //queue notifications
             for (MaintainersObject m : maintainers) {
-                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new object property has been submitted", "New object property Forms");
+                notLib.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new object property has been submitted", "New object property Forms");
             }
         }
 
@@ -211,7 +211,7 @@ public class RequestController extends BaseController {
             List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
             //queue notifications
             for (MaintainersObject m : maintainers) {
-                NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new annotation property has been submitted", "New annotation property Forms");
+                notLib.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new annotation property has been submitted", "New annotation property Forms");
             }
         }
         return new RequestResponse(id,

@@ -16,19 +16,36 @@
             <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
+    <appender name="File" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${catalina.home}/logs/ontolobridge.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${catalina.home}/logs/ontolobridge.%i.log.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>3</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>5KB</maxFileSize>
+        </triggeringPolicy>
+        <encoder>
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
 
     <!-- Enable the Console and Sentry appenders, Console is provided as an example
  of a non-Sentry logger that is set to a different logging threshold -->
     <root level="INFO">
         <appender-ref ref="Console" />
         <appender-ref ref="Sentry" />
+        <appender-ref ref="File" />
     </root>
     <logger name="org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver" level="error">
         <appender-ref ref="Console"/>
         <appender-ref ref="Sentry" />
+        <appender-ref ref="File" />
     </logger>
     <logger name="org.springframework.web.servlet.PageNotFound" level="error">
         <appender-ref ref="Console"/>
         <appender-ref ref="Sentry" />
+        <appender-ref ref="File" />
     </logger>
 </configuration>
