@@ -3,12 +3,20 @@ package edu.miami.schurer.ontolobridge.library;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import edu.miami.schurer.ontolobridge.NotifierService;
+import edu.miami.schurer.ontolobridge.OntologyManagerService;
 import edu.miami.schurer.ontolobridge.Responses.DebugStatusResponse;
+import edu.miami.schurer.ontolobridge.Responses.MaintainersObject;
 import edu.miami.schurer.ontolobridge.Responses.OperationResponse;
 import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
+import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import edu.miami.schurer.ontolobridge.utilities.DbUtil;
+import io.sentry.Sentry;
 import javassist.bytecode.stackmap.BasicBlock;
+import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -16,8 +24,12 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
 import javax.validation.constraints.Null;
+import java.io.IOException;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class RequestsLibrary {
 
@@ -28,11 +40,22 @@ public class RequestsLibrary {
 
     JdbcTemplate jdbcTemplate;
 
-    @Value("${spring.datasource.url}")
-    String connectionURL;
+    @Autowired
+    public OntologyManagerService Manager;
 
-    @Value("${app.mysql}")
-    boolean isMYSQL;
+    @Autowired
+    public NotifierService notifier;
+
+    @Autowired
+    private AppProperties appProp;
+
+
+    NotificationLibrary notLib ;
+
+    @PostConstruct
+    void Init(){
+        notLib = new NotificationLibrary(appProp);
+    }
 
     public RequestsLibrary(JdbcTemplate template,String cpanelApiKey){
         this.jdbcTemplate = template;
@@ -103,7 +126,7 @@ public class RequestsLibrary {
                 return 0;
             }
         }
-        boolean isMySQL = isMYSQL;
+        boolean isMySQL = DbUtil.isMySQL();
         String sql = "INSERT INTO requests (" +
                 "label," +
                 "description," +
@@ -182,6 +205,45 @@ public class RequestsLibrary {
         }
 
         jdbcTemplate.execute("insert into request_status (request_id,current_status) VALUES("+id+",'submitted')");
+
+        if(ontology != null && !ontology.isEmpty()){
+            List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
+            //queue notifications
+            String email = "New Ontolobridge Requests Submitted";
+            HashMap<String,String> stringReplace = new HashMap();
+            try{
+                email = IOUtils.toString(new ClassPathResource("/emails/termSubmission-Maintainer.email").getInputStream(), "UTF-8");
+                stringReplace.put("__label__",label);
+                stringReplace.put("__description__",description);
+                stringReplace.put("__uri_superclass__",uri_superclass);
+                stringReplace.put("__reference__",reference);
+                stringReplace.put("__justification__",justification);
+                stringReplace.put("__request_type__",requestType);
+                stringReplace.put("__statusapi__",appProp.getApiURL());
+                stringReplace.put("__site__",appProp.getSiteURL());
+                stringReplace.put("__ticketID__",id.toString());
+            }catch(IOException e){
+                System.out.println("Email Exception");
+                Sentry.capture(e);
+
+            }
+            for (MaintainersObject m : maintainers) {
+                stringReplace.put("__user_name__",m.getContact_location());
+                email = notLib.formatMessage(email,stringReplace);
+                notLib.InsertNotification(jdbcTemplate, m.getContact_method(), m.getContact_location(), email, "New Ontolobridge term");
+            }
+            if(submitter_email != null && !submitter.isEmpty() && notify){
+                try{
+                    email = IOUtils.toString(new ClassPathResource("/emails/termSubmission.email").getInputStream(), "UTF-8");
+                }catch(IOException e){
+                    System.out.println("Email Exception");
+                    Sentry.capture(e);
+                }
+                stringReplace.put("__user_name__",submitter_email);
+                email = notLib.formatMessage(email,stringReplace);
+                notLib.InsertNotification(jdbcTemplate, "email", submitter_email, email, "New Ontolobridge term");
+            }
+        }
         return id;
     }
 

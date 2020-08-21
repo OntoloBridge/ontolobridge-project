@@ -19,11 +19,6 @@ public class NotificationLibrary {
 
     private AppProperties appProp;
 
-    @Value("${spring.datasource.url}")
-    String connectionURL;
-    @Value("${app.mysql}")
-    boolean isMYSQL;
-
     public NotificationLibrary(AppProperties appProp) {
         this.appProp = appProp;
     }
@@ -35,7 +30,7 @@ public class NotificationLibrary {
                                          String title){
         List<Object> args = new ArrayList<>();
         String sql = "insert into notifications (notification_method,address,message,title,created_date) values (?,?,?,?,current_date)";
-        boolean isMySQL = isMYSQL;
+        boolean isMySQL = DbUtil.isMySQL();
 
         if (!isMySQL) {
             sql += " RETURNING id;";
@@ -105,18 +100,18 @@ public class NotificationLibrary {
             stringReplace.put("__site__",appProp.getSiteURL());
             stringReplace.put("__ticketID__",ID);
 
-            email = formatEmail(email,stringReplace);
+            email = formatMessage(email,stringReplace);
         }catch (Exception e){
             System.out.println(e);
         }
         return InsertNotification(jdbcTemplate,"email",submitter_email,email,"New Requests");
     }
-    private String formatEmail(String email, HashMap<String,String> keys){
+    public String formatMessage(String message, HashMap<String,String> keys){
         for (Map.Entry<String, String> entry : keys.entrySet()
              ) {
-            email = email.replace(entry.getKey(), entry.getValue());
+            message = message.replace(entry.getKey(), entry.getValue());
 
         }
-        return email;
+        return message;
     }
 }

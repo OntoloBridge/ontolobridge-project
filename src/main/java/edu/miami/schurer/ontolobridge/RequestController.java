@@ -22,6 +22,7 @@ import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotBlank;
 import java.awt.image.ImagingOpException;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -34,9 +35,6 @@ public class RequestController extends BaseController {
 
     @Value("${spring.profiles.active:Unknown}")
     private String activeProfile;
-
-    @Autowired
-    public OntologyManagerService Manager;
 
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successful requests",response = RequestResponse.class),
@@ -70,30 +68,6 @@ public class RequestController extends BaseController {
                 "term");
         if(id < 0)
             throw new OntoloException("Error Making Requests");
-        if(ontology != null && !ontology.isEmpty()){
-            List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
-            //queue notifications
-            //todo:REPLACE WITH SUBMISSION EMAIL
-            for (MaintainersObject m : maintainers) {
-                notLib.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new term has been submitted", "New term Forms");
-            }
-        }
-
-
-        if(submitter_email != null && notify){
-            notLib.InsertEmail(JDBCTemplate,
-                    "/emails/termSubmission.email",
-                    label,
-                    description,
-                    uri_superclass,
-                    reference,
-                    justification,
-                    submitter,
-                    submitter_email,
-                    "term",
-                    id.toString());
-            //notifier.sendEmailNotification(submitter_email,"Received Term Request","Hello "+submitter+"\n\n We have received your request for "+label+" and appropriate maintainers notified");
-        }
 
         return new RequestResponse(id,
                 "http://ontolobridge.ccs.miami.edu/ONTB_"+String.format("%9d",id).replace(' ','0'),
@@ -129,14 +103,6 @@ public class RequestController extends BaseController {
                 notify,
                 ontology,
                 "Data");
-
-        if(ontology != null && !ontology.isEmpty()){
-            List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
-            //queue notifications
-            for (MaintainersObject m : maintainers) {
-                notLib.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new data property has been submitted", "New data property Forms");
-            }
-        }
         return new RequestResponse(id,
                 "http://ontolobridge.ccs.miami.edu/ONTB_"+String.format("%9d",id).replace(' ','0'),
                 "ONTB_"+String.format("%9d",id).replace(' ','0'));
@@ -168,13 +134,6 @@ public class RequestController extends BaseController {
                 ontology,
                 "Object");
 
-        if(ontology != null && !ontology.isEmpty()){
-            List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
-            //queue notifications
-            for (MaintainersObject m : maintainers) {
-                notLib.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new object property has been submitted", "New object property Forms");
-            }
-        }
 
         return new RequestResponse(id,
                 "http://ontolobridge.ccs.miami.edu/ONTB_"+String.format("%9d",id).replace(' ','0'),
@@ -207,13 +166,6 @@ public class RequestController extends BaseController {
                 ontology,
                 "Annotation");
 
-        if(ontology != null && !ontology.isEmpty()){
-            List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
-            //queue notifications
-            for (MaintainersObject m : maintainers) {
-                notLib.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new annotation property has been submitted", "New annotation property Forms");
-            }
-        }
         return new RequestResponse(id,
                 "http://ontolobridge.ccs.miami.edu/ONTB_"+String.format("%9d",id).replace(' ','0'),
                 "ONTB_"+String.format("%9d",id).replace(' ','0'));

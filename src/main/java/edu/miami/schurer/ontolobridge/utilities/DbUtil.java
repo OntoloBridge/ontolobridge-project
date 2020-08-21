@@ -1,5 +1,9 @@
 package edu.miami.schurer.ontolobridge.utilities;
 
+import ch.qos.logback.core.db.dialect.DBUtil;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.Connection;
@@ -8,20 +12,19 @@ import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 
+
+@ConfigurationProperties(prefix = "spring.datasource")
+@Configuration
 public class DbUtil {
 
-    public static boolean isMySQL(JdbcTemplate tpl) {
-        boolean isMySQL = false;
+    private static String DATASOURCE_URL;
 
-        Connection conn = null;
-        try {
-            conn = Objects.requireNonNull(tpl.getDataSource()).getConnection();
-            String dbName = conn.getMetaData().getDatabaseProductName();
-            isMySQL = StringUtils.containsIgnoreCase(dbName, "mysql");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return isMySQL;
+    @Value("${spring.datasource.url}")
+    public void setSvnUrl(String datasourceUrl) {
+        DATASOURCE_URL = datasourceUrl;
+    }
+    public static boolean isMySQL() {
+        return  DbUtil.DATASOURCE_URL.contains("mysql");
     }
 
 }

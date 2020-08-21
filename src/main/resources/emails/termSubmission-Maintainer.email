@@ -1,0 +1,13 @@
+Dear __user_name__,
+
+You have submitted a request for a new term with the following details:
+
+Label: __label__
+Description: __description__
+Superclass URI: __uri_superclass__
+References: __references__
+Justification: __justification__
+Type: __request_type__
+
+Thank you for your contribution,
+OntoloBridge Team
