@@ -32,7 +32,7 @@ public class RequestsLibrary {
     String connectionURL;
 
     @Value("${app.mysql}")
-    String isMYSQL;
+    boolean isMYSQL;
 
     public RequestsLibrary(JdbcTemplate template,String cpanelApiKey){
         this.jdbcTemplate = template;

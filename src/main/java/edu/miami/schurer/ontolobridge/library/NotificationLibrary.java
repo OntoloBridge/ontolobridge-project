@@ -1,5 +1,6 @@
 package edu.miami.schurer.ontolobridge.library;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import edu.miami.schurer.ontolobridge.utilities.DbUtil;
 import org.apache.commons.io.IOUtils;
@@ -20,6 +21,8 @@ public class NotificationLibrary {
 
     @Value("${spring.datasource.url}")
     String connectionURL;
+    @Value("${app.mysql}")
+    boolean isMYSQL;
 
     public NotificationLibrary(AppProperties appProp) {
         this.appProp = appProp;
@@ -32,7 +35,7 @@ public class NotificationLibrary {
                                          String title){
         List<Object> args = new ArrayList<>();
         String sql = "insert into notifications (notification_method,address,message,title,created_date) values (?,?,?,?,current_date)";
-        boolean isMySQL = connectionURL.contains("mysql");
+        boolean isMySQL = isMYSQL;
 
         if (!isMySQL) {
             sql += " RETURNING id;";
