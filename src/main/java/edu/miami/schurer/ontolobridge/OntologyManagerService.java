@@ -224,7 +224,7 @@ public class OntologyManagerService {
             for (MaintainersObject m : maintainers) {
                 E.put("submitter_email",m.getContact_location());
                 E.put("submitter","Maintainer");
-                notLib.InsertEmail(JDBCTemplate,"/emails/termSubmission.email",E);
+                notLib.InsertTermEmail(JDBCTemplate,"/emails/termSubmission.email",E);
                 //NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new " + E.get("type") + " has been submitted", "New " + E.get("type") + " Forms");
             }
         }

@@ -230,7 +230,7 @@ public class RequestsLibrary {
             List<MaintainersObject> maintainers = Manager.GetMaintainers(ontology);
             //queue notifications
             String email = "New Ontolobridge Requests Submitted";
-            HashMap<String,String> stringReplace = new HashMap();
+            HashMap<String,Object> stringReplace = new HashMap();
             try{
                 email = IOUtils.toString(new ClassPathResource("/emails/termSubmission-Maintainer.email").getInputStream(), "UTF-8");
                 stringReplace.put("__label__",label);
