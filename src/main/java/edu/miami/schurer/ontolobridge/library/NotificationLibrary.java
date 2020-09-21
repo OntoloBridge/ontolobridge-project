@@ -24,10 +24,10 @@ public class NotificationLibrary {
     }
 
     public int InsertNotification(JdbcTemplate jdbcTemplate,
-                                         String notificationMethod,
-                                         String address,
-                                         String message,
-                                         String title){
+                                  String notificationMethod,
+                                  String address,
+                                  String message,
+                                  String title){
         List<Object> args = new ArrayList<>();
         String sql = "insert into notifications (notification_method,address,message,title,created_date) values (?,?,?,?,current_date)";
         boolean isMySQL = DbUtil.isMySQL();
@@ -51,54 +51,64 @@ public class NotificationLibrary {
 
         return id;
     }
-    public int InsertTermEmail(JdbcTemplate jdbcTemplate, String emailTemplate, HashMap<String,Object> values){
-        return InsertEmail(jdbcTemplate,emailTemplate,"New Requests",values.get("submitter_email").toString(),values);
-    }
 
-    public int InsertTermEmail(JdbcTemplate jdbcTemplate,
-                               String emailTemplate,
-                               String label,
-                               String description,
-                               String uri_superclass,
-                               String reference,
-                               String justification,
-                               String submitter,
-                               String submitter_email,
-                               String request_type,
-                               String ID){
-        HashMap<String,Object> values = new HashMap<>();
-        values.put("label",label);
-        values.put("description",description);
-        values.put("uri_superclass",uri_superclass);
-        values.put("references",reference);
-        values.put("justification",justification);
-        values.put("submitter",submitter);
-        values.put("submitter_email",submitter_email);
-        values.put("request_type",request_type);
-        values.put("id",ID);
-        return InsertTermEmail(jdbcTemplate,emailTemplate,values);
+    public int InsertEmail(JdbcTemplate jdbcTemplate,String emailTemplate, HashMap<String,Object> values){
+
+
+
+
+        return InsertEmail(jdbcTemplate,emailTemplate,
+                values.get("label").toString(),
+                values.get("description").toString(),
+                values.get("uri_superclass").toString(),
+                values.get("references").toString(),
+                values.get("justification").toString(),
+                values.get("submitter").toString(),
+                values.get("submitter_email").toString(),
+                values.get("request_type").toString(),
+                values.get("id").toString()
+        );
     }
 
     public int InsertEmail(JdbcTemplate jdbcTemplate,
-                                String emailTemplate,
-                                String title,
-                                String address,
-                                HashMap<String,Object> values){
+                           String emailTemplate,
+                           String label,
+                           String description,
+                           String uri_superclass,
+                           String reference,
+                           String justification,
+                           String submitter,
+                           String submitter_email,
+                           String request_type,
+                           String ID){
         String email = "";
         try{
             email = IOUtils.toString(new ClassPathResource(emailTemplate).getInputStream(), "UTF-8");
         }catch(IOException e){
             System.out.println("Email Exception");
-            return 0;
         }
         try {
-}catch (Exception e){
+            HashMap<String,String> stringReplace = new HashMap();
+            stringReplace.put("__user_name__",submitter);
+            stringReplace.put("__label__",label);
+            stringReplace.put("__description__",description);
+            stringReplace.put("__uri_superclass__",uri_superclass);
+            stringReplace.put("__reference__",reference);
+            stringReplace.put("__justification__",justification);
+            stringReplace.put("__request_type__",request_type);
+            stringReplace.put("__statusapi__",appProp.getApiURL());
+            stringReplace.put("__site__",appProp.getSiteURL());
+            stringReplace.put("__ticketID__",ID);
+
+            email = formatMessage(email,stringReplace);
+        }catch (Exception e){
             System.out.println(e);
         }
-        return InsertNotification(jdbcTemplate,"email",address,email,title);
+        return InsertNotification(jdbcTemplate,"email",submitter_email,email,"New Requests");
     }
+    public String formatMessage(String message, HashMap<String,String> keys){
         for (Map.Entry<String, String> entry : keys.entrySet()
-			 ) {
+        ) {
             message = message.replace(entry.getKey(), entry.getValue());
 
         }

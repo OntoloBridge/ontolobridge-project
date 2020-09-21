@@ -118,7 +118,7 @@ public class RequestsLibrary {
                     return 0;
                 }
             }
-            boolean isMySQL = DbUtil.isMySQL(jdbcTemplate);
+            boolean isMySQL = DbUtil.isMySQL();
             String sql = "INSERT INTO requests (" +
                     "label," +
                     "description," +

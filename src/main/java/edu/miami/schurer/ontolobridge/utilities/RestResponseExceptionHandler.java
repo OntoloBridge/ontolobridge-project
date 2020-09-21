@@ -31,7 +31,7 @@ public class RestResponseExceptionHandler extends ResponseEntityExceptionHandler
     ResponseEntity<Object> handleOntoloException(HttpServletRequest req, OntoloException ex) {
         Sentry.capture(ex);
         logger.info("Exception Caught",ex);
-        return generateResponse(ex.getStatusCode(),ex.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        return generateResponse(ex.getStatusCode().value(),ex.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
     }
     @ExceptionHandler(AccessDeniedException.class)
     ResponseEntity<Object> handleAccessException(HttpServletRequest req, AccessDeniedException ex) {
