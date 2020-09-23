@@ -37,6 +37,7 @@ import java.util.*;
 import static edu.miami.schurer.ontolobridge.utilities.DbUtil.genRandomString;
 
 @RestController
+@RequestMapping("/auth")
 public class AuthController extends BaseController {
 
     @Autowired
@@ -124,6 +125,10 @@ public class AuthController extends BaseController {
         Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
                 .orElseThrow(() -> new OntoloException(" User Role not found."));
         if(!authentication.getAuthorities().contains(userRole))
+            throw new OntoloException("Registration Incomplete",HttpStatus.BAD_REQUEST); //code not found throw error
+        Role verifiedRole = roleRepository.findByName(RoleName.ROLE_VERIFIED)
+                .orElseThrow(() -> new OntoloException(" User Role not found."));
+        if(!authentication.getAuthorities().contains(verifiedRole))
             throw new OntoloException("Email not verified",HttpStatus.BAD_REQUEST); //code not found throw error
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
