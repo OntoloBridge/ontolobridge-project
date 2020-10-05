@@ -3,10 +3,16 @@ package edu.miami.schurer.ontolobridge;
 import edu.miami.schurer.ontolobridge.library.AuthLibrary;
 import edu.miami.schurer.ontolobridge.library.NotificationLibrary;
 import edu.miami.schurer.ontolobridge.library.RequestsLibrary;
+import edu.miami.schurer.ontolobridge.library.RoleRepository;
+import edu.miami.schurer.ontolobridge.models.Role;
+import edu.miami.schurer.ontolobridge.models.RoleName;
 import edu.miami.schurer.ontolobridge.utilities.AppProperties;
+import edu.miami.schurer.ontolobridge.utilities.OntoloException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import javax.annotation.PostConstruct;
 import java.sql.Array;
@@ -34,6 +40,10 @@ public class BaseController {
     RequestsLibrary req;
 
 
+    @Autowired
+    RoleRepository roleRepository;
+
+
     @PostConstruct
     void Init(){
         notLib = new NotificationLibrary(appProp);
@@ -44,6 +54,11 @@ public class BaseController {
 
         logger = Logger.getLogger("org.springframework.web.servlet.PageNotFound");
         logger.setLevel(Level.SEVERE);
+    }
+    protected  boolean hasRole(Authentication auth, RoleName role) throws OntoloException{
+        Role retrievedRole = roleRepository.findByName(role)
+                .orElseThrow(() -> new OntoloException("Role not found.",5));
+        return auth.getAuthorities().contains(new SimpleGrantedAuthority(retrievedRole.getName().toString()));
     }
 
     protected HashMap<String, Object> formatResults(HashMap<String, Object> results, List<?> data){

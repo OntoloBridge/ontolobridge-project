@@ -3,8 +3,6 @@ package edu.miami.schurer.ontolobridge;
 import edu.miami.schurer.ontolobridge.Responses.JwtResponse;
 import edu.miami.schurer.ontolobridge.Responses.OperationResponse;
 import edu.miami.schurer.ontolobridge.Responses.UserResponse;
-import edu.miami.schurer.ontolobridge.library.NotificationLibrary;
-import edu.miami.schurer.ontolobridge.library.RoleRepository;
 import edu.miami.schurer.ontolobridge.library.UserRepository;
 import edu.miami.schurer.ontolobridge.models.Detail;
 import edu.miami.schurer.ontolobridge.models.Role;
@@ -16,6 +14,7 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,7 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import edu.miami.schurer.ontolobridge.utilities.*;
 
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
 import java.util.*;
 
@@ -46,8 +45,6 @@ public class AuthController extends BaseController {
     @Autowired
     UserRepository userRepository;
 
-    @Autowired
-    RoleRepository roleRepository;
 
     @Autowired
     PasswordEncoder encoder;
@@ -103,9 +100,9 @@ public class AuthController extends BaseController {
         user.setDetails(details); //save details
 
         HashSet<Role> roles = new HashSet<>(); //add user role now that user is verified
-        Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
+        Role verifiedRole = roleRepository.findByName(RoleName.ROLE_VERIFIED)
                 .orElseThrow(() -> new OntoloException(" User Role not found."));
-        roles.add(userRole);
+        roles.add(verifiedRole);
         user.setRoles(roles); //give the new user the role of user
 
         userRepository.save(user); //save user
@@ -122,48 +119,84 @@ public class AuthController extends BaseController {
                         password
                 )
         );
-        Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
-                .orElseThrow(() -> new OntoloException(" User Role not found."));
-        if(!authentication.getAuthorities().contains(userRole))
-            throw new OntoloException("Registration Incomplete",HttpStatus.BAD_REQUEST); //code not found throw error
-        Role verifiedRole = roleRepository.findByName(RoleName.ROLE_VERIFIED)
-                .orElseThrow(() -> new OntoloException(" User Role not found."));
-        if(!authentication.getAuthorities().contains(verifiedRole))
-            throw new OntoloException("Email not verified",HttpStatus.BAD_REQUEST); //code not found throw error
+        if(!hasRole(authentication,RoleName.ROLE_VERIFIED))
+            throw new OntoloException("Email not verified",6,HttpStatus.BAD_REQUEST).DoNotLog(); //code not found throw error
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = jwtProvider.generateJwtToken(authentication);
-        return ResponseEntity.ok(new JwtResponse(jwt));
+        return ResponseEntity.ok(new JwtResponse(jwt, authentication.getName()));
+    }
+
+    @RequestMapping(path="/checkToken", method= RequestMethod.GET, produces={"application/json"})
+    @PreAuthorize("isAuthenticated()")
+    public Object checkToken(){
+        return true;
     }
 
     @RequestMapping(path="/updateUser", method= RequestMethod.POST, produces={"application/json"})
     @PreAuthorize("isAuthenticated()")
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
-    public OperationResponse updateDetails(@ApiParam(value = "Field being Changed") @RequestParam(value="fields",defaultValue = "")@NotBlank List<String> Fields,
-                                              @ApiParam(value = "User Password") @RequestParam(value="data", defaultValue = "") @NotBlank List<String> Data) {
+    public OperationResponse updateDetails(HttpServletRequest r,
+                                           @ApiParam(value = "Field being Changed") @RequestParam(value="fields",defaultValue = "")@NotBlank List<String> Fields,
+                                           @ApiParam(value = "User Password") @RequestParam(value="data", defaultValue = "") @NotBlank List<String> Data) {
+        List<Map<String,Object>> allDetails = auth.GetAllDetails();
+        List<String> allowedDetails = new ArrayList<>();
+        for(Map<String,Object> m: allDetails){ //create whitelist of possible details that can be stored and saved
+            allowedDetails.add(m.get("field").toString());
+        }
 
-        User user = (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal(); //get current user
+        User user =  userRepository.findById(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
         ArrayList<Detail> details =new ArrayList<>(user.getDetails()); //get details about the user
         for(int i =0;i<Fields.size();i++) { //loop through updates and update whatever is needed.
             boolean fieldSet = false;
+            if(!allowedDetails.contains(Fields.get(i))) //if detail not in whitelist, discard
+                continue;
             for (Detail d : details) {
                 if(d.getField().equals(Fields.get(i))) {
+                    if(Data.get(i).isEmpty()) //if empty remove the data from the table
+                        details.remove(d);
                     d.setValue(Data.get(i));
                     fieldSet = true; //if we get a hit go to the next
                     break;
                 }
             }
-            if(!fieldSet)
+            if(!fieldSet && !Data.get(i).isEmpty()) //if field has not been set that means its a new detail, add detail
                 details.add(new Detail(Fields.get(i),Data.get(i)));
         }
+        user.setDetails(new HashSet<>(details));
+        userRepository.save(user);
         return new OperationResponse("success",true,user.getId());
     }
 
-    @RequestMapping(path="/getDetails", method= RequestMethod.POST, produces={"application/json"})
+    @RequestMapping(path="/getUserDetails", method= RequestMethod.GET, produces={"application/json"})
     @PreAuthorize("isAuthenticated()")
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public UserResponse UserDetails(){
         User user =  userRepository.findById(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
         return new UserResponse(user);
+    }
+    @RequestMapping(path="/getAllDetails", method= RequestMethod.GET, produces={"application/json"})
+    public Object AllDetails(){
+        return formatResults(auth.GetAllDetails());
+    }
+    @RequestMapping(path="/retrieveMissingDetails", method= RequestMethod.GET, produces={"application/json"})
+    @PreAuthorize("isAuthenticated()")
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    public Object CheckUserDetails(){
+        User user =  userRepository.findById(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
+        Set<Detail> details = user.getDetails();
+        List<Map<String,Object>> requiredDetails = auth.GetAllDetails();
+        List<Map<String,Object>> missingDetails = new ArrayList<>(requiredDetails);
+        for(Map<String,Object> m: requiredDetails){
+            for(Detail d:details){
+                if(m.get("field").equals(d.getField()) && Integer.parseInt(m.get("required").toString()) == 1){
+                    missingDetails.remove(m);
+                }
+            }
+            if(Integer.parseInt(m.get("required").toString()) != 1){
+                missingDetails.remove(m);
+            }
+        }
+        return formatResults(missingDetails);
     }
 }

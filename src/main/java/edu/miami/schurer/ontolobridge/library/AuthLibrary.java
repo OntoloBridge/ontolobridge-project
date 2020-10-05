@@ -34,5 +34,8 @@ public class AuthLibrary {
                 rs.getInt(1));
         return userID;
     }
+    public List<Map<String,Object>> GetAllDetails() throws EmptyResultDataAccessException {
+        return jdbcTemplate.queryForList("select * from user_detail_definitions");
+    }
 
 }

@@ -3,9 +3,11 @@ package edu.miami.schurer.ontolobridge.Responses;
 public class JwtResponse {
     private String token;
     private String type = "Bearer";
+    private String username;
 
-    public JwtResponse(String accessToken) {
+    public JwtResponse(String accessToken,String username) {
         this.token = accessToken;
+        this.username = username;
     }
 
     public String getAccessToken() {
@@ -14,6 +16,14 @@ public class JwtResponse {
 
     public void setAccessToken(String accessToken) {
         this.token = accessToken;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.token = username;
     }
 
     public String getTokenType() {

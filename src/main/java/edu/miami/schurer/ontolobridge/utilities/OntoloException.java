@@ -7,6 +7,7 @@ public class OntoloException extends Exception {
 
     private HttpStatus statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     private Integer errorCode = 500;
+    private boolean logError = true;
     // Parameterless Constructor
     public OntoloException() {}
 
@@ -32,7 +33,13 @@ public class OntoloException extends Exception {
         this.statusCode=code;
         this.errorCode=ecode;
     }
-
+    public OntoloException DoNotLog(){
+        logError = false;
+        return this;
+    }
+    public Boolean getShouldLog() {
+        return logError;
+    }
     public Integer getErrorCode() {
         return errorCode;
     }

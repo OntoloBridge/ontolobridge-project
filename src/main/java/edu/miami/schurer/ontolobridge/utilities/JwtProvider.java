@@ -40,6 +40,12 @@ public class JwtProvider {
                 .parseClaimsJws(token)
                 .getBody().getSubject();
     }
+    public Date getExpirationFromJWTToken(String token){
+        return Jwts.parser()
+                .setSigningKey(jwtSecret)
+                .parseClaimsJws(token)
+                .getBody().getExpiration();
+    }
 
     public boolean validateJwtToken(String authToken) {
         try {
