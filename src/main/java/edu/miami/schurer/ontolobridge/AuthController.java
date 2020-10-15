@@ -133,48 +133,7 @@ public class AuthController extends BaseController {
         return true;
     }
 
-    @RequestMapping(path="/updateUser", method= RequestMethod.POST, produces={"application/json"})
-    @PreAuthorize("isAuthenticated()")
-    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
-    public OperationResponse updateDetails(HttpServletRequest r,
-                                           @ApiParam(value = "Field being Changed") @RequestParam(value="fields",defaultValue = "")@NotBlank List<String> Fields,
-                                           @ApiParam(value = "User Password") @RequestParam(value="data", defaultValue = "") @NotBlank List<String> Data) {
-        List<Map<String,Object>> allDetails = auth.GetAllDetails();
-        List<String> allowedDetails = new ArrayList<>();
-        for(Map<String,Object> m: allDetails){ //create whitelist of possible details that can be stored and saved
-            allowedDetails.add(m.get("field").toString());
-        }
 
-        User user =  userRepository.findById(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
-        ArrayList<Detail> details =new ArrayList<>(user.getDetails()); //get details about the user
-        for(int i =0;i<Fields.size();i++) { //loop through updates and update whatever is needed.
-            boolean fieldSet = false;
-            if(!allowedDetails.contains(Fields.get(i))) //if detail not in whitelist, discard
-                continue;
-            for (Detail d : details) {
-                if(d.getField().equals(Fields.get(i))) {
-                    if(Data.get(i).isEmpty()) //if empty remove the data from the table
-                        details.remove(d);
-                    d.setValue(Data.get(i));
-                    fieldSet = true; //if we get a hit go to the next
-                    break;
-                }
-            }
-            if(!fieldSet && !Data.get(i).isEmpty()) //if field has not been set that means its a new detail, add detail
-                details.add(new Detail(Fields.get(i),Data.get(i)));
-        }
-        user.setDetails(new HashSet<>(details));
-        userRepository.save(user);
-        return new OperationResponse("success",true,user.getId());
-    }
-
-    @RequestMapping(path="/getUserDetails", method= RequestMethod.GET, produces={"application/json"})
-    @PreAuthorize("isAuthenticated()")
-    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
-    public UserResponse UserDetails(){
-        User user =  userRepository.findById(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
-        return new UserResponse(user);
-    }
     @RequestMapping(path="/getAllDetails", method= RequestMethod.GET, produces={"application/json"})
     public Object AllDetails(){
         return formatResults(auth.GetAllDetails());

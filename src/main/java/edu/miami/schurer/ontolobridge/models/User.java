@@ -9,6 +9,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.NaturalId;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Entity
 @Table(name = "users", uniqueConstraints = {
@@ -55,7 +56,7 @@ public class User{
         this.name = name;
         this.email = email;
         this.password = password;
-        verified = false;
+        verified = roles.contains(new Role(RoleName.ROLE_VERIFIED));
     }
 
     public Long getId() {
@@ -113,6 +114,11 @@ public class User{
     public void setVerified(boolean verified) {
         this.verified = verified;
     }
+
+    public void isFullyRegistered() {
+        this.verified = verified;
+    }
+
 
 
 }

@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel(description = "Response returned for all term status requests")
-public class DebugStatusResponse extends StatusResponse{
+public class FullStatusResponse extends StatusResponse{
     @ApiModelProperty( required = true, example = "submitted")
     public String label;
 
@@ -30,24 +30,24 @@ public class DebugStatusResponse extends StatusResponse{
     @ApiModelProperty( required = true, example = "submitted")
     int notify;
 
-    public DebugStatusResponse(String status,
-                               int request_id,
-                               String provisional_uri,
-                               String provisional_curie,
-                               String message,
-                               String uri,
-                               String curie,
-                               String type,
-                               long timestamp,
-                               String datetime,
-                               String label,
-                               String description,
-                               String superclass_ontology,
-                               String superclass_id,
-                               String reference,
-                               String justification,
-                               String submitter,
-                               int notify) {
+    public FullStatusResponse(String status,
+                              Long request_id,
+                              String provisional_uri,
+                              String provisional_curie,
+                              String message,
+                              String uri,
+                              String curie,
+                              String type,
+                              long timestamp,
+                              String datetime,
+                              String label,
+                              String description,
+                              String superclass_ontology,
+                              String superclass_id,
+                              String reference,
+                              String justification,
+                              String submitter,
+                              int notify) {
         this.status = status;
         this.request_id = request_id;
         this.provisional_uri = provisional_uri;

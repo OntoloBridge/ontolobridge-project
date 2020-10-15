@@ -1,35 +1,26 @@
 package edu.miami.schurer.ontolobridge.library;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import edu.miami.schurer.ontolobridge.NotifierService;
 import edu.miami.schurer.ontolobridge.OntologyManagerService;
-import edu.miami.schurer.ontolobridge.Responses.DebugStatusResponse;
+import edu.miami.schurer.ontolobridge.Responses.FullStatusResponse;
 import edu.miami.schurer.ontolobridge.Responses.MaintainersObject;
 import edu.miami.schurer.ontolobridge.Responses.OperationResponse;
 import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
 import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import edu.miami.schurer.ontolobridge.utilities.DbUtil;
 import io.sentry.Sentry;
-import javassist.bytecode.stackmap.BasicBlock;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
-import javax.validation.constraints.Null;
 import java.io.IOException;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static edu.miami.schurer.ontolobridge.utilities.DbUtil.genRandomString;
 
@@ -58,6 +49,7 @@ public class RequestsLibrary {
     void Init(){
         notLib = new NotificationLibrary(appProp);
     }
+
 
     public RequestsLibrary(JdbcTemplate template,String cpanelApiKey){
         this.jdbcTemplate = template;
@@ -267,33 +259,36 @@ public class RequestsLibrary {
         return id;
     }
 
-    public List<StatusResponse> TermStatus(JdbcTemplate jdbcTemplate, Integer id,String include){
+    public List<StatusResponse> TermStatus( Long id,String include){
         String sql ="";
         //For deubgging
-        if(include.equals("all"))
+        if(include.equals("all") || include.equals("user")) //if we have a debug requests or a user requesting their own requests
             sql = "select * from requests";
         else
             sql = "select id,submission_status,uri_ontology,uri_identifier,current_message,updated_date,request_type,full_uri from requests";
         List<Object> args = new ArrayList<>();
         if(id> 0 ){
-            sql+=" where id = ?";
+            if(include.equals("user")) //if its a user replace single id with user_id
+                sql+=" where user_id = ?";
+            else
+                sql+=" where id = ?";
             args.add(id);
         }
 
 
-        if(include.equals("all"))
+        if(include.equals("all") | include.equals("user")) //if we are in debug mode or a user is requesting then get all
             return jdbcTemplate.query(sql,
                     args.toArray(),
                     (rs, rowNum) -> {
-                        String curie = "ONTB_"+id;
+                        String curie = "ONTB_"+rs.getLong("id");
                         String uri = "http://ontolobridge.org/"+curie;
                         String newURI = rs.getString("full_uri");
                         if(newURI == null){
                             newURI = "";
                         }
-                        return new DebugStatusResponse(
+                        return new FullStatusResponse(
                                 rs.getString("submission_status"),
-                                id,
+                                rs.getLong("id"),
                                 uri,
                                 curie,
                                 rs.getString("current_message"),
@@ -319,12 +314,12 @@ public class RequestsLibrary {
                         if(newURI == null){
                             newURI = "";
                         }
-                        String curie = "ONTB_"+id;
+                        String curie = "ONTB_"+rs.getLong("id");
                         String uri = "http://ontolobridge.org/"+curie;
-                        return new StatusResponse(rs.getString("submission_status"),id,uri,curie,rs.getString("current_message"),newURI,"",rs.getString("request_type"),rs.getTimestamp("updated_date").getTime(),rs.getDate("updated_date").toString());
+                        return new StatusResponse(rs.getString("submission_status"),rs.getLong("id"),uri,curie,rs.getString("current_message"),newURI,"",rs.getString("request_type"),rs.getTimestamp("updated_date").getTime(),rs.getDate("updated_date").toString());
                     });
     }
-    public OperationResponse TermUpdateStatus(JdbcTemplate jdbcTemplate, Integer id, String status,String message){
+    public OperationResponse TermUpdateStatus(Integer id, String status,String message){
         String sql = "UPDATE requests  SET  submission_status = ?::status, current_message = ? WHERE id = ?";
         List<Object> args = new ArrayList<>();
         args.add(status);

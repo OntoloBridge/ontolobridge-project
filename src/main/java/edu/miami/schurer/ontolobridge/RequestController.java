@@ -18,7 +18,7 @@ import java.util.List;
 
 
 @RestController
-@PreAuthorize("isAuthenticated()")
+@PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication)")
 @RequestMapping("/requests")
 public class RequestController extends BaseController {
 
@@ -181,7 +181,7 @@ public class RequestController extends BaseController {
         if(activeProfile.equals("prod")){
             include="";
         }
-        List<StatusResponse> result = req.TermStatus(JDBCTemplate, id,include);
+        List<StatusResponse> result = req.TermStatus(new Long(id),include);
         if(result.size() == 1)
             return result.get(0);
         return result;
@@ -198,7 +198,7 @@ public class RequestController extends BaseController {
     public Object termStatus(@ApiParam(value = "ID of Forms" ,required = true,example = "0") @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
-        return req.TermUpdateStatus(JDBCTemplate, id,status,message);
+        return req.TermUpdateStatus(id,status,message);
 
     }
 
@@ -212,7 +212,7 @@ public class RequestController extends BaseController {
     public Object updateTerm(@ApiParam(value = "ID of requests" ,required = true,example = "0") @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
-        return req.TermUpdateStatus(JDBCTemplate, id,status,message);
+        return req.TermUpdateStatus(id,status,message);
 
     }
 }

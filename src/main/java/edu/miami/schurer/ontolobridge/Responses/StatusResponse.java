@@ -11,7 +11,7 @@ public class StatusResponse {
     public String status;
 
     @ApiModelProperty( required = true, example = "1")
-    public int request_id;
+    public Long request_id;
 
     @ApiModelProperty( required = true, example = "http://ontolobridge.ccs.miami.edu/ONTB_25")
     public String provisional_uri;
@@ -41,7 +41,7 @@ public class StatusResponse {
 
     }
 
-    public StatusResponse(String status,int request_id, String provisional_uri, String provisional_curie, String message, String uri, String curie,String type, long timestamp,String datetime) {
+    public StatusResponse(String status,Long request_id, String provisional_uri, String provisional_curie, String message, String uri, String curie,String type, long timestamp,String datetime) {
         this.status = status;
         this.request_id = request_id;
         this.provisional_uri = provisional_uri;

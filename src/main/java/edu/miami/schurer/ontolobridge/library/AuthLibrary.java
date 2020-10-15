@@ -1,14 +1,8 @@
 package edu.miami.schurer.ontolobridge.library;
 
-import edu.miami.schurer.ontolobridge.Responses.DebugStatusResponse;
-import edu.miami.schurer.ontolobridge.Responses.OperationResponse;
-import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
-import edu.miami.schurer.ontolobridge.Responses.UserResponse;
-import edu.miami.schurer.ontolobridge.utilities.DbUtil;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
