@@ -1,14 +1,17 @@
 package edu.miami.schurer.ontolobridge;
 
 import edu.miami.schurer.ontolobridge.Responses.*;
-import edu.miami.schurer.ontolobridge.library.UserRepository;
+import edu.miami.schurer.ontolobridge.models.Role;
+import edu.miami.schurer.ontolobridge.utilities.OntoloException;
+import edu.miami.schurer.ontolobridge.utilities.OntoloUserDetailsService;
 import edu.miami.schurer.ontolobridge.models.Detail;
 import edu.miami.schurer.ontolobridge.models.User;
-import edu.miami.schurer.ontolobridge.utilities.OntoloException;
 import edu.miami.schurer.ontolobridge.utilities.UserPrinciple;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,10 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static edu.miami.schurer.ontolobridge.utilities.DbUtil.genRandomString;
 
 
 @RestController
@@ -35,7 +37,7 @@ public class UserController extends BaseController {
     private String activeProfile;
 
     @Autowired
-    UserRepository userRepository;
+    private OntoloUserDetailsService userService;
 
     @Autowired
     PasswordEncoder encoder;
@@ -60,15 +62,15 @@ public class UserController extends BaseController {
             allowedDetails.add(m.get("field").toString());
         }
 
-        User user =  userRepository.findById(((UserPrinciple) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
+        User user =  userService.findByUserId(((UserPrinciple) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId());
         user.setPassword(encoder.encode(password));
-        userRepository.save(user);
+        userService.saveUser(user);
         return new OperationResponse("success",true,user.getId());
     }
 
     @RequestMapping(path="/details", method= RequestMethod.POST, produces={"application/json"})
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
-    public OperationResponse updateDetails(HttpServletRequest r,
+    public Object updateDetails(HttpServletRequest r,
                                            @ApiParam(value = "Field being Changed") @RequestParam(value="fields",defaultValue = "")@NotBlank List<String> Fields,
                                            @ApiParam(value = "Data being Updated") @RequestParam(value="data", defaultValue = "") @NotBlank List<String> Data) {
         List<Map<String,Object>> allDetails = auth.GetAllDetails();
@@ -77,7 +79,45 @@ public class UserController extends BaseController {
             allowedDetails.add(m.get("field").toString());
         }
 
-        User user =  userRepository.findById(((UserPrinciple) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
+
+        User user =  userService.findByUserId(((UserPrinciple) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId());
+
+        //Set privileged fields
+
+        //set email, which requires verification again
+        if(Fields.contains("email")) {
+            if(userService.emailExists(Data.get(Fields.indexOf("email")))) {
+                return new ResponseEntity<>(formatResultsWithoutCount("Email is already in use!"),
+                        HttpStatus.BAD_REQUEST);
+            }
+            user.setEmail(Data.get(Fields.indexOf("email")));
+            String vCode =genRandomString(10);
+            HashSet<Detail> details =  new HashSet<>();
+            details.add(new Detail("verification",vCode));
+            user.setDetails(details);//add an email verification field
+
+            HashMap<String,Object> emailVariables = new HashMap<>();
+            emailVariables.put("verification",vCode);
+            notLib.InsertEmail(JDBCTemplate,"/email/verificationTemplate.email",Data.get(Fields.indexOf("email")),"Verification Email",emailVariables);
+
+        }
+        if(Fields.contains("pass1") && Fields.contains("pass2")) {
+            String pass1 = Data.get(Fields.indexOf("pass1"));
+            String pass2 = Data.get(Fields.indexOf("pass2"));
+            if(!pass1.equals(pass2)){
+                return new ResponseEntity<>(formatResultsWithoutCount("Both passwords should be equal"),
+                        HttpStatus.BAD_REQUEST);
+            }
+            user.setPassword(encoder.encode(Data.get(Fields.indexOf("pass1"))));
+            String vCode =genRandomString(10);
+            HashMap<String,Object> emailVariables = new HashMap<>();
+            notLib.InsertEmail(JDBCTemplate,"/email/passwordChange.email",Data.get(Fields.indexOf("email")),"Your Password Has Changed",emailVariables);
+
+        }
+
+        if(Fields.contains("name"))
+            user.setName(Data.get(Fields.indexOf("name")));
+
         ArrayList<Detail> details =new ArrayList<>(user.getDetails()); //get details about the user
         for(int i =0;i<Fields.size();i++) { //loop through updates and update whatever is needed.
             boolean fieldSet = false;
@@ -96,15 +136,26 @@ public class UserController extends BaseController {
                 details.add(new Detail(Fields.get(i),Data.get(i)));
         }
         user.setDetails(new HashSet<>(details));
-        userRepository.save(user);
+        userService.saveUser(user);
         return new OperationResponse("success",true,user.getId());
     }
 
     @RequestMapping(path="/details", method= RequestMethod.GET, produces={"application/json"})
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public UserResponse GetDetails(){
-        User user =  userRepository.findById(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
+        User user =  userService.findByUserId(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId());
         return new UserResponse(user);
+    }
+
+    @RequestMapping(path="/roles", method= RequestMethod.GET, produces={"application/json"})
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    public Object roles(){
+        List<String> roles = new ArrayList<>();
+        User user =  userService.findByUserId(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId());
+        for(Role r:user.getRoles()){
+            roles.add(r.getName().toString());
+        }
+        return roles;
     }
 
     @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication)")
@@ -113,5 +164,49 @@ public class UserController extends BaseController {
     public Object GetRequests(){
         Long id =((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
         return req.TermStatus(id,"user");
+    }
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and hasRole(\"ROLE_CURATOR\")")
+    @RequestMapping(path="/maintainer_requests", method= RequestMethod.GET, produces={"application/json"})
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    public Object GetMaintainerRequests(){
+        Long id =((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
+
+        return userService.getMaintainerRequests(id);
+    }
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successful requests",response = StatusResponse.class),
+            @ApiResponse(code = 500, message = "Internal server error", response = ExceptionResponse.class)
+    }
+    )
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and hasRole(\"ROLE_CURATOR\")")
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    @RequestMapping(path="/RequestStatus", method= RequestMethod.GET)
+    public FullStatusResponse termStatus(@ApiParam(value = "ID of requests",example = "0") @RequestParam(value="requestID") Integer id){
+        List<StatusResponse> result = req.TermStatus(new Long(id),"maintainer");
+        Long userID =((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
+        if(result.size() == 1) {
+            StatusResponse requests = result.get(0);
+            if(userService.isOwnerOfRequests(userID,new Long(id)) || userService.isMaintainerOfRequests(userID,new Long(id))){
+                return  (FullStatusResponse)requests;
+            }
+        }
+        return null;
+
+    }
+
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and hasRole(\"ROLE_CURATOR\")")
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    @RequestMapping(path="/RequestHistory", method= RequestMethod.GET)
+    public List<Map<String,Object>> termHistory(@ApiParam(value = "ID of requests",example = "0") @RequestParam(value="requestID") Integer id){
+        List<StatusResponse> result = req.TermStatus(new Long(id),"maintainer");
+        Long userID =((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
+        if(result.size() == 1) {
+            StatusResponse requests = result.get(0);
+            if(userService.isOwnerOfRequests(userID,new Long(id)) || userService.isMaintainerOfRequests(userID,new Long(id))){
+                return  req.TermHistory(requests.request_id);
+            }
+        }
+        return new ArrayList<>();
+
     }
 }

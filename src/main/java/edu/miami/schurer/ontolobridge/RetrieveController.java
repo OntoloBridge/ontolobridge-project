@@ -3,6 +3,7 @@ package edu.miami.schurer.ontolobridge;
 import com.opencsv.CSVWriter;
 import edu.miami.schurer.ontolobridge.Responses.ExceptionResponse;
 import edu.miami.schurer.ontolobridge.Responses.RequestResponse;
+import edu.miami.schurer.ontolobridge.models.Ontology;
 import edu.miami.schurer.ontolobridge.utilities.OntoloException;
 import io.swagger.annotations.*;
 import org.springframework.http.HttpHeaders;
@@ -127,5 +128,11 @@ public class RetrieveController extends BaseController {
         responseHeaders.add( "content-disposition", "attachment;filename="+ontology+"-newTerms-"+formatter.format(today)+".csv");
         respEntity = new ResponseEntity(s.toString(), responseHeaders, HttpStatus.OK);
         return respEntity;
+    }
+
+    @RequestMapping(path="/ontologies", method= RequestMethod.GET)
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    public List<Map<String, Object>> requestOntologies() throws OntoloException {
+        return req.GetAllOntologies();
     }
 }

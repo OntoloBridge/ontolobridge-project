@@ -36,15 +36,13 @@ public class User{
     @Size(min=6, max = 100)
     private String password;
 
-    private boolean verified;
-
     @OneToMany( fetch = FetchType.EAGER,
             cascade = CascadeType.ALL,
             orphanRemoval=true)
     @JoinColumn(name = "user_id")
     private Set<Detail> details = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
@@ -56,7 +54,6 @@ public class User{
         this.name = name;
         this.email = email;
         this.password = password;
-        verified = roles.contains(new Role(RoleName.ROLE_VERIFIED));
     }
 
     public Long getId() {
@@ -108,15 +105,11 @@ public class User{
     }
 
     public boolean isVerified() {
-        return verified;
+        return roles.contains(new Role(RoleName.ROLE_VERIFIED));
     }
 
-    public void setVerified(boolean verified) {
-        this.verified = verified;
-    }
-
-    public void isFullyRegistered() {
-        this.verified = verified;
+    public void setVerified() {
+        roles.add(new Role(RoleName.ROLE_VERIFIED));
     }
 
 

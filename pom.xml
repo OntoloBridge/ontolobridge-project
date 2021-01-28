@@ -119,6 +119,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry</artifactId>
+            <version>1.7.30</version>
+        </dependency>
+        <dependency>
+            <groupId>io.sentry</groupId>
+            <artifactId>sentry-logback</artifactId>
+            <version>1.7.30</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -136,36 +146,25 @@
 
     <profiles>
         <profile>
-            <id>development</id>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <properties>
                 <activatedProperties>dev</activatedProperties>
             </properties>
             <build>
                 <finalName>ontolobridge-test</finalName>
             </build>
-            <dependencies>
-                <dependency>
-                    <groupId>io.sentry</groupId>
-                    <artifactId>sentry-logback</artifactId>
-                    <version>1.7.30</version>
-                </dependency>
-            </dependencies>
         </profile>
         <profile>
-            <id>production</id>
+            <id>prod</id>
             <properties>
                 <activatedProperties>prod</activatedProperties>
             </properties>
             <build>
                 <finalName>ontolobridge</finalName>
             </build>
-            <dependencies>
-                <dependency>
-                    <groupId>io.sentry</groupId>
-                    <artifactId>sentry-logback</artifactId>
-                    <version>1.7.30</version>
-                </dependency>
-            </dependencies>
         </profile>
     </profiles>
 

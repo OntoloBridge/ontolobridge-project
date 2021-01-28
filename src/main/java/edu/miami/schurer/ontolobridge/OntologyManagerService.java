@@ -159,7 +159,7 @@ public class OntologyManagerService {
     public void checkNewNotifications()
     {
         //SQL statement to get the relevent information of id of request, assumed ontology and type of request but only if no ontology has been assigned
-        String sql = "select * from requests where (uri_ontology = '') IS NOT FALSE";
+        String sql = "select * from requests where (assigned_ontology = '') IS NOT FALSE";
 
         //retrieve results and store in simple hashmap
         List<HashMap<String,Object>> unassignedRequests = JDBCTemplate.query(sql,
@@ -216,7 +216,7 @@ public class OntologyManagerService {
             }
 
             //update the requests to the approriate ontology
-            String updateSQL = "update requests set uri_ontology = ? where id = ?";
+            String updateSQL = "update requests set assigned_ontology = ? where id = ?";
             JDBCTemplate.update(updateSQL,args.toArray());
             System.out.println("Setting term "+E.get("id")+" to "+args.get(0));
 

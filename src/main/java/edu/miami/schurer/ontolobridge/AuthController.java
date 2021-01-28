@@ -31,6 +31,7 @@ import edu.miami.schurer.ontolobridge.utilities.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
+import java.time.Instant;
 import java.util.*;
 
 import static edu.miami.schurer.ontolobridge.utilities.DbUtil.genRandomString;
@@ -44,6 +45,9 @@ public class AuthController extends BaseController {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    OntoloSecurityService securityService;
 
 
     @Autowired
@@ -130,6 +134,14 @@ public class AuthController extends BaseController {
     @RequestMapping(path="/checkToken", method= RequestMethod.GET, produces={"application/json"})
     @PreAuthorize("isAuthenticated()")
     public Object checkToken(){
+        if(!securityService.isRegistered(SecurityContextHolder.getContext().getAuthentication())){
+            Map<String,Object> responseBody = new HashMap<>();
+            responseBody.put("error",5);
+            responseBody.put("message","Registration not complete");
+            responseBody.put("timestamp", Instant.now());
+            //return a server error
+            return new ResponseEntity<Object>(responseBody,HttpStatus.OK);
+        }
         return true;
     }
 

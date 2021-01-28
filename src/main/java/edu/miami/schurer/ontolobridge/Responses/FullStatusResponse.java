@@ -4,6 +4,9 @@ package edu.miami.schurer.ontolobridge.Responses;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.util.List;
+import java.util.Map;
+
 @ApiModel(description = "Response returned for all term status requests")
 public class FullStatusResponse extends StatusResponse{
     @ApiModelProperty( required = true, example = "submitted")
@@ -25,10 +28,23 @@ public class FullStatusResponse extends StatusResponse{
     public String justification;
 
     @ApiModelProperty( required = true, example = "submitted")
+    public String submitter_email;
+
+    @ApiModelProperty( required = true, example = "submitted")
     public String submitter;
 
     @ApiModelProperty( required = true, example = "submitted")
     int notify;
+
+    @ApiModelProperty( required = true, example = "submitted")
+    List<Map<String,Object>> history;
+
+    @ApiModelProperty( required = true, example = "submitted")
+    int user_id;
+
+    public void setHistory(List<Map<String, Object>> history) {
+        this.history = history;
+    }
 
     public FullStatusResponse(String status,
                               Long request_id,
@@ -47,7 +63,10 @@ public class FullStatusResponse extends StatusResponse{
                               String reference,
                               String justification,
                               String submitter,
-                              int notify) {
+                              String submitter_email,
+                              int notify,
+                              String ontology,
+                              long user_id) {
         this.status = status;
         this.request_id = request_id;
         this.provisional_uri = provisional_uri;
@@ -60,12 +79,58 @@ public class FullStatusResponse extends StatusResponse{
         this.type = type;
         this.notify = notify;
         this.submitter = submitter;
+        this.submitter_email = submitter_email;
         this.justification = justification;
         this.reference = reference;
         this.superclass_id = superclass_id;
         this.superclass_ontology = superclass_ontology;
         this.label = label;
         this.description = description;
+        this.ontology = ontology;
+        this.user_id = (int)user_id;
     }
 
+    public String getLabel() {
+        return label;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getSuperclass_ontology() {
+        return superclass_ontology;
+    }
+
+    public String getSuperclass_id() {
+        return superclass_id;
+    }
+
+    public String getReference() {
+        return reference;
+    }
+
+    public String getJustification() {
+        return justification;
+    }
+
+    public String getSubmitter_email() {
+        return submitter_email;
+    }
+
+    public String getSubmitter() {
+        return submitter;
+    }
+
+    public int getNotify() {
+        return notify;
+    }
+
+    public List<Map<String, Object>> getHistory() {
+        return history;
+    }
+
+    public int getUser_id() {
+        return user_id;
+    }
 }

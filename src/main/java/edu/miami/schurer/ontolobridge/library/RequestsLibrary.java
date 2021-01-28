@@ -7,8 +7,10 @@ import edu.miami.schurer.ontolobridge.Responses.FullStatusResponse;
 import edu.miami.schurer.ontolobridge.Responses.MaintainersObject;
 import edu.miami.schurer.ontolobridge.Responses.OperationResponse;
 import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
+import edu.miami.schurer.ontolobridge.models.Ontology;
 import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import edu.miami.schurer.ontolobridge.utilities.DbUtil;
+import edu.miami.schurer.ontolobridge.utilities.UserPrinciple;
 import io.sentry.Sentry;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
@@ -33,27 +36,28 @@ public class RequestsLibrary {
 
     JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    public OntologyManagerService Manager;
+    private OntologyManagerService Manager;
 
-    @Autowired
-    public NotifierService notifier;
+    private NotifierService notifier;
 
-    @Autowired
     private AppProperties appProp;
 
 
     NotificationLibrary notLib ;
 
-    @PostConstruct
-    void Init(){
-        notLib = new NotificationLibrary(appProp);
-    }
 
-
-    public RequestsLibrary(JdbcTemplate template,String cpanelApiKey){
+    public RequestsLibrary(JdbcTemplate template,
+                           String cpanelApiKey,
+                           NotifierService notifier,
+                           OntologyManagerService Manager,
+                           NotificationLibrary notLib,
+                           AppProperties appProp){
         this.jdbcTemplate = template;
         this.cpanelApiKey = cpanelApiKey;
+        this.appProp = appProp;
+        this.notifier = notifier;
+        this.Manager = Manager;
+        this.notLib = notLib;
     }
     private String genRandomEmail() {
         return genRandomString(10)+"@ontolobridge.org";
@@ -74,6 +78,7 @@ public class RequestsLibrary {
         Integer id = null;
         boolean addedEmail = false;
         String emailDeleteTemp = "";
+        Long userID = ((UserPrinciple) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId(); //cache using user ID
         try {
             if (anonymize) {
                 String randomEmail = genRandomEmail(); //generate a random anonymous email
@@ -123,9 +128,10 @@ public class RequestsLibrary {
                     "submitter_email," +
                     "notify," +
                     "request_type," +
-                    "uri_ontology" +
+                    "assigned_ontology," +
+                    "user_id"+
                     ") VALUES (" +
-                    "?,?,?,?,?,?,?,?,?,?,?,?)";
+                    "?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
             if (!isMySQL) {
                 sql += " RETURNING id;";
@@ -179,6 +185,7 @@ public class RequestsLibrary {
             args.add(notify ? 1 : 0);
             args.add(requestType);
             args.add(ontology.isEmpty() ? "" : ontology);
+            args.add(userID);
 
             if (isMySQL) {
                 jdbcTemplate.update(sql, args.toArray());
@@ -262,10 +269,10 @@ public class RequestsLibrary {
     public List<StatusResponse> TermStatus( Long id,String include){
         String sql ="";
         //For deubgging
-        if(include.equals("all") || include.equals("user")) //if we have a debug requests or a user requesting their own requests
+        if(include.equals("all") || include.equals("user")| include.equals("maintainer")) //if we have a debug requests or a user requesting their own requests
             sql = "select * from requests";
         else
-            sql = "select id,submission_status,uri_ontology,uri_identifier,current_message,updated_date,request_type,full_uri from requests";
+            sql = "select id,submission_status,uri_ontology,uri_identifier,current_message,updated_date,request_type,full_uri,assigned_ontology from requests";
         List<Object> args = new ArrayList<>();
         if(id> 0 ){
             if(include.equals("user")) //if its a user replace single id with user_id
@@ -276,7 +283,7 @@ public class RequestsLibrary {
         }
 
 
-        if(include.equals("all") | include.equals("user")) //if we are in debug mode or a user is requesting then get all
+        if(include.equals("all") | include.equals("user")| include.equals("maintainer")) //if we are in debug mode or a user is requesting then get all
             return jdbcTemplate.query(sql,
                     args.toArray(),
                     (rs, rowNum) -> {
@@ -304,7 +311,10 @@ public class RequestsLibrary {
                                 rs.getString("reference"),
                                 rs.getString("justification"),
                                 rs.getString("submitter"),
-                                rs.getInt("notify"));
+                                rs.getString("submitter_email"),
+                                rs.getInt("notify"),
+                                rs.getString("assigned_ontology"),
+                                rs.getLong("user_id"));
                     });
         else
             return jdbcTemplate.query(sql,
@@ -316,7 +326,7 @@ public class RequestsLibrary {
                         }
                         String curie = "ONTB_"+rs.getLong("id");
                         String uri = "http://ontolobridge.org/"+curie;
-                        return new StatusResponse(rs.getString("submission_status"),rs.getLong("id"),uri,curie,rs.getString("current_message"),newURI,"",rs.getString("request_type"),rs.getTimestamp("updated_date").getTime(),rs.getDate("updated_date").toString());
+                        return new StatusResponse(rs.getString("submission_status"),rs.getLong("id"),uri,curie,rs.getString("current_message"),newURI,"",rs.getString("request_type"),rs.getTimestamp("updated_date").getTime(),rs.getDate("updated_date").toString(),rs.getString("assigned_ontology"));
                     });
     }
     public OperationResponse TermUpdateStatus(Integer id, String status,String message){
@@ -340,6 +350,19 @@ public class RequestsLibrary {
 
 
         return new OperationResponse("success",true,id);
+    }
+    public List<Map<String,Object>> TermHistory(Long id){
+        String sql = "select * from request_status where request_id = ?";
+
+        List<Object> args = new ArrayList<>();
+        args.add(id);
+        List<Map<String,Object>> result = jdbcTemplate.queryForList(sql, args.toArray());
+        return result;
+    }
+
+    public List<Map<String, Object>> GetAllOntologies(){
+        String sql = "select id,name,url,ontology_short,seperator,padding from ontologies where id > 0";
+         return jdbcTemplate.queryForList(sql);
     }
 
 }

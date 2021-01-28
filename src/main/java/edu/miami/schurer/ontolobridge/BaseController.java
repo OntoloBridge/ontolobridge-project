@@ -35,6 +35,12 @@ public class BaseController {
     @Autowired
     private AppProperties appProp;
 
+    @Autowired
+    public OntologyManagerService Manager;
+
+    @Autowired
+    public NotifierService notifier;
+
     NotificationLibrary notLib ;
     AuthLibrary auth;
     RequestsLibrary req;
@@ -48,7 +54,7 @@ public class BaseController {
     void Init(){
         notLib = new NotificationLibrary(appProp);
         auth = new AuthLibrary(JDBCTemplate);
-        req = new RequestsLibrary(JDBCTemplate,cpanelApiKey);
+        req = new RequestsLibrary(JDBCTemplate,cpanelApiKey,notifier,Manager,notLib,appProp);
         Logger logger = Logger.getLogger("org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver");
         logger.setLevel(Level.SEVERE);
 

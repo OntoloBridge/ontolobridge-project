@@ -25,7 +25,7 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
     private JwtProvider tokenProvider;
 
     @Autowired
-    private UserDetailsServiceImpl userDetailsService;
+    private OntoloUserDetailsService userDetailsService;
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthTokenFilter.class);
 

@@ -24,7 +24,7 @@ import edu.miami.schurer.ontolobridge.utilities.*;
 )
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
-    UserDetailsServiceImpl userDetailsService;
+    OntoloUserDetailsService userDetailsService;
 
     @Bean
     public JwtAuthTokenFilter authenticationJwtTokenFilter() {
