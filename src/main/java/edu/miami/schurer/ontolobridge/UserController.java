@@ -7,9 +7,12 @@ import edu.miami.schurer.ontolobridge.utilities.OntoloUserDetailsService;
 import edu.miami.schurer.ontolobridge.models.Detail;
 import edu.miami.schurer.ontolobridge.models.User;
 import edu.miami.schurer.ontolobridge.utilities.UserPrinciple;
+import io.sentry.Sentry;
 import io.swagger.annotations.*;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
+import java.io.IOException;
 import java.util.*;
 
 import static edu.miami.schurer.ontolobridge.utilities.DbUtil.genRandomString;
@@ -42,14 +46,48 @@ public class UserController extends BaseController {
     @Autowired
     PasswordEncoder encoder;
 
-
-    //TODO: allow password reset
-    @RequestMapping(path="/resetPassword", method= RequestMethod.GET, produces={"application/json"})
+    @PreAuthorize("permitAll()")
+    @RequestMapping(path="/request_reset_password", method= RequestMethod.GET, produces={"application/json"})
+    public Object ResetPassword(@ApiParam(value = "User Email") @RequestParam(value="email", defaultValue = "") @NotBlank String email){
+        User user = userService.findByUserEmail(email);
+        if(user != null) {
+            String key = genRandomString(20);
+            user.addDetail(new Detail("reset_key", key));
+            HashMap<String,Object> stringReplace = new HashMap();
+            try{
+                email = IOUtils.toString(new ClassPathResource("/emails/passwordReset.email").getInputStream(), "UTF-8");
+            }catch(IOException e){
+                System.out.println("Email Exception");
+                Sentry.capture(e);
+            }
+            stringReplace.put("__user_name__",user.getName());
+            stringReplace.put("__ontEmail__",this.appProp.getsupportEmail());
+            stringReplace.put("__reset_url__",this.appProp.getSiteURL()+"/reset_password?token="+key);
+            email = notLib.formatMessage(email,stringReplace);
+            notLib.InsertNotification(JDBCTemplate, "email", user.getEmail(), email, "Ontolobridge - Password Reset Requests");
+            userService.saveUser(user);
+        }
+        return new OperationResponse("success",true,0);
+    }
+    @RequestMapping(path="/reset_password", method= RequestMethod.GET, produces={"application/json"})
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     @PreAuthorize("permitAll()")
     public OperationResponse resetPassword(HttpServletRequest r,
-                                           @ApiParam(value = "User Email") @RequestParam(value="email", defaultValue = "") @NotBlank String email) {
-        return new OperationResponse("success",true,0);
+                                           @ApiParam(value = "reset_token") @RequestParam(value="token", defaultValue = "") @NotBlank String token,
+                                           @ApiParam(value = "password") @RequestParam(value="password", defaultValue = "") @NotBlank String password) {
+       Long userID = userService.verifyPasswordReset(token);
+       if(userID != null){
+           User user = userService.findByUserId(userID);
+           user.setPassword(password);
+           Set<Detail> details = user.getDetails();
+           //remove the reset_key to prevent reuse
+           details.removeIf(m -> m.getField().equals("reset_key"));
+           user.setDetails(details);
+           userService.saveUser(user);
+       }else{
+           return new OperationResponse("incorrect token",false,0);
+       }
+       return new OperationResponse("success",true,0);
     }
 
     @RequestMapping(path="/password", method= RequestMethod.POST, produces={"application/json"})
@@ -165,6 +203,7 @@ public class UserController extends BaseController {
         Long id =((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
         return req.TermStatus(id,"user");
     }
+
     @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and hasRole(\"ROLE_CURATOR\")")
     @RequestMapping(path="/maintainer_requests", method= RequestMethod.GET, produces={"application/json"})
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })

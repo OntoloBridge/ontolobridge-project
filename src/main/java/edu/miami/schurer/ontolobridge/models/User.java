@@ -96,6 +96,10 @@ public class User{
         this.details = details;
     }
 
+    public void addDetail(Detail detail) {
+        this.details.add(detail);
+    }
+
     public Set<Role> getRoles() {
         return roles;
     }

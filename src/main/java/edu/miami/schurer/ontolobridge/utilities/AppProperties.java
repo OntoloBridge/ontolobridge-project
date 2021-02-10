@@ -12,26 +12,40 @@ public class AppProperties {
      */
     private String siteURL = "";
 
-
-
-    /**
-     * apikey of github service
-     */
-    private String apiURL = "";
-
-    public String getSiteURL() {
-        return siteURL;
-    }
-
     public void setSiteURL(String siteURL) {
         this.siteURL = siteURL;
-    }
-
-    public String getApiURL() {
-        return apiURL;
     }
 
     public void setApiURL(String apiURL) {
         this.apiURL = apiURL;
     }
+
+    public void setSupportEmail(String supportEmail) {
+        this.supportEmail = supportEmail;
+    }
+
+    /**
+     * apikey of api services for website service
+     */
+    private String apiURL = "";
+
+    /**
+     * the support email address people can contact
+     */
+    private String supportEmail = "";
+
+    public String getSiteURL() {
+        return siteURL;
+    }
+
+
+    public String getApiURL() {
+        return apiURL;
+    }
+
+
+    public String getsupportEmail() {
+        return supportEmail;
+    }
+
 }

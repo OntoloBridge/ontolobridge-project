@@ -63,6 +63,14 @@ public class OntoloUserDetailsServiceImpl implements OntoloUserDetailsService {
         return u;
     }
 
+    @Transactional @Override
+    public User findByUserEmail(String email) {
+        Session session = (Session)entityManager.unwrap(Session.class);
+        User u = userRepository.findByEmail(email).get();
+        session.close();
+        return u;
+    }
+
     @Transactional
     public User saveUser(User user) {
         user = userRepository.save(user);
@@ -106,5 +114,11 @@ public class OntoloUserDetailsServiceImpl implements OntoloUserDetailsService {
             results.add(req.TermStatus(id,"maintainer").get(0));
         }
         return results;
+    }
+    public Long verifyPasswordReset(String token){
+        List<Object> args = new ArrayList<>();
+        args.add(token);
+        Long userID = jdbcTemplate.queryForObject("select user_id from user_details where field = 'reset_key' and value = ?",args.toArray(),Long.class);
+        return userID;
     }
 }

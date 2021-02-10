@@ -33,7 +33,7 @@ public class BaseController {
     String cpanelApiKey;
 
     @Autowired
-    private AppProperties appProp;
+    protected AppProperties appProp;
 
     @Autowired
     public OntologyManagerService Manager;
