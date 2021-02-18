@@ -47,7 +47,7 @@ public class UserController extends BaseController {
     PasswordEncoder encoder;
 
     @PreAuthorize("permitAll()")
-    @RequestMapping(path="/request_reset_password", method= RequestMethod.GET, produces={"application/json"})
+    @RequestMapping(path="/request_reset_password", method= RequestMethod.POST, produces={"application/json"})
     public Object ResetPassword(@ApiParam(value = "User Email") @RequestParam(value="email", defaultValue = "") @NotBlank String email){
         User user = userService.findByUserEmail(email);
         if(user != null) {
@@ -70,15 +70,14 @@ public class UserController extends BaseController {
         return new OperationResponse("success",true,0);
     }
     @RequestMapping(path="/reset_password", method= RequestMethod.GET, produces={"application/json"})
-    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     @PreAuthorize("permitAll()")
     public OperationResponse resetPassword(HttpServletRequest r,
-                                           @ApiParam(value = "reset_token") @RequestParam(value="token", defaultValue = "") @NotBlank String token,
+                                           @ApiParam(value = "token") @RequestParam(value="token", defaultValue = "") @NotBlank String token,
                                            @ApiParam(value = "password") @RequestParam(value="password", defaultValue = "") @NotBlank String password) {
        Long userID = userService.verifyPasswordReset(token);
        if(userID != null){
            User user = userService.findByUserId(userID);
-           user.setPassword(password);
+           user.setPassword(encoder.encode(password));
            Set<Detail> details = user.getDetails();
            //remove the reset_key to prevent reuse
            details.removeIf(m -> m.getField().equals("reset_key"));
