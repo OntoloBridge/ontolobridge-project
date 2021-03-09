@@ -342,8 +342,10 @@ public class RequestsLibrary {
         }
         try {
             args = new ArrayList<>();
+            args.add(id);
             args.add(status);
-            jdbcTemplate.update("insert into request_status (request_id,current_status) VALUES("+id+",?)",args.toArray());
+            args.add(message);
+            jdbcTemplate.update("insert into request_status (request_id,current_status,message) VALUES(?,?,?)",args.toArray());
         }catch(Exception e){
             return new OperationResponse("failure",false,id);
         }
@@ -362,7 +364,58 @@ public class RequestsLibrary {
 
     public List<Map<String, Object>> GetAllOntologies(){
         String sql = "select id,name,url,ontology_short,seperator,padding from ontologies where id > 0";
-         return jdbcTemplate.queryForList(sql);
+        return jdbcTemplate.queryForList(sql);
     }
+    public Object TermUpdate(String id, Map<String, String> parameters) {
+        long long_id = Long.parseLong(id);
+        try {
+            List<Object> args = new ArrayList<>();
+            args = new ArrayList<>();
+            args.add(long_id);
+            StringBuilder SQL;
+            List<String> columns= new ArrayList<>();
+            StringBuilder message = new StringBuilder();
+            List<String> current_status = jdbcTemplate.<String>query("SELECT * from requests where id = ?",args.toArray(), (rs, rowNum) -> {
+                for(int i = 1; i<=rs.getMetaData().getColumnCount(); i++) {
+                    columns.add(rs.getMetaData().getColumnName(i));
+                }
+                return rs.getString("submission_status");
+            });
+            args.clear();
+            SQL = new StringBuilder("UPDATE requests SET ");
+            for(Map.Entry<String,String> entry:parameters.entrySet()){
+                String key = entry.getKey();
+                if(key.equals("id")){
+                    continue;
+                }
+                if(key.equals("current_status")){
+                    key = "submission_status";
+                }
+                if(columns.contains(entry.getKey())){
+                    SQL.append(columns.get(columns.indexOf(entry.getKey().toLowerCase()))).append(" = ?, ");
 
+                    //if the current status is comment then use the status in the database
+                    if(!key.equals("submission_status") || entry.getValue().equals("comment")) {
+                        args.add(entry.getValue());
+                    }else{
+                        args.add(current_status.get(0));
+                    }
+                    message.append("updated ").append(columns.get(columns.indexOf(key))).append(" to ").append(entry.getValue()).append("\n");
+                }
+            }
+            args.add(long_id);
+            SQL.delete(SQL.length()-2,SQL.length()); //remove extra comma
+            SQL.append(" WHERE id = ?");
+            jdbcTemplate.update(SQL.toString(),args.toArray());
+            args.clear();
+            args.add(long_id);
+            args.add(parameters.get("current_status"));
+            args.add(message);
+            jdbcTemplate.update("insert into request_status (request_id,current_status,message) VALUES(?,?,?)",args.toArray());
+        }catch(Exception e){
+            System.out.println(e);
+            return new OperationResponse("failure",false,long_id);
+        }
+        return new OperationResponse("success",true,long_id);
+    }
 }

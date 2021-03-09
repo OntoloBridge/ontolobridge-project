@@ -2,6 +2,8 @@ package edu.miami.schurer.ontolobridge.utilities;
 
 import io.sentry.Sentry;
 import org.apache.logging.log4j.LogManager;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -49,7 +51,7 @@ public class RestResponseExceptionHandler extends ResponseEntityExceptionHandler
     }
 
     //code to generate common message for all exceptions
-    ResponseEntity<Object> generateResponse(int errorCode,String message,HttpStatus statusCode){
+    public static ResponseEntity<Object> generateResponse(int errorCode,String message,HttpStatus statusCode){
         Map<String,Object> responseBody = new HashMap<>();
         responseBody.put("error",errorCode);
         responseBody.put("message",message);

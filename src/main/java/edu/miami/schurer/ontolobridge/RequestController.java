@@ -12,9 +12,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotBlank;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -207,12 +209,11 @@ public class RequestController extends BaseController {
             @ApiResponse(code = 500, message = "Internal server error", response = ExceptionResponse.class)
     }
     )
-    @RequestMapping(path="/UpdateRequests", method= RequestMethod.POST)
+    @RequestMapping(path="/UpdateRequest", method= RequestMethod.POST)
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
-    public Object updateTerm(@ApiParam(value = "ID of requests" ,required = true,example = "0") @RequestParam(value="requestID") Integer id,
-                             @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
-                             @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
-        return req.TermUpdateStatus(id,status,message);
-
+    public Object updateTerm(@RequestParam Map<String, String> parameters ){
+        if(parameters.containsKey("id") && !parameters.get("id").isEmpty())
+            return req.TermUpdate(parameters.get("id"),parameters);
+        return new OperationResponse("Missing ID",false,0);
     }
 }

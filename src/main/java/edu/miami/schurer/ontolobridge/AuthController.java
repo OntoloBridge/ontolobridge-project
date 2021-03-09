@@ -12,7 +12,9 @@ import edu.miami.schurer.ontolobridge.utilities.JwtProvider;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
@@ -23,13 +25,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import edu.miami.schurer.ontolobridge.utilities.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.ConstraintViolation;
 import javax.validation.constraints.NotBlank;
 import java.time.Instant;
 import java.util.*;
@@ -55,6 +55,11 @@ public class AuthController extends BaseController {
 
     @Autowired
     JwtProvider jwtProvider;
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Object> duplicateEmailException(HttpServletRequest req, ConstraintViolationException e) {
+        return RestResponseExceptionHandler.generateResponse(400,"Error Processing Requests:"+e.getMessage(),HttpStatus.UNAUTHORIZED);
+    }
 
     //Redirect the root request to swagger page
     @RequestMapping(path="/register", method= RequestMethod.POST, produces={"application/json"})
@@ -82,7 +87,18 @@ public class AuthController extends BaseController {
         emailVariables.put("verification",vCode);
         notLib.InsertEmail(JDBCTemplate,"/email/verificationTemplate.email",email,"Verification Email",emailVariables);
 
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+        }catch(javax.validation.ConstraintViolationException e){
+            StringBuilder output = new StringBuilder();
+            output.append("Error Processing Requests:\r\n");
+            for(ConstraintViolation c: e.getConstraintViolations()){
+                output.append(c.getPropertyPath());
+                output.append(c.getMessage());
+                output.append("\r\n");
+            }
+            return RestResponseExceptionHandler.generateResponse(400,output.toString(),HttpStatus.UNAUTHORIZED);
+        }
 
         return formatResultsWithoutCount("User registered successfully!");
     }
