@@ -3,6 +3,7 @@ package edu.miami.schurer.ontolobridge.library;
 import com.sun.org.apache.xpath.internal.operations.Bool;
 import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import edu.miami.schurer.ontolobridge.utilities.DbUtil;
+import io.sentry.Sentry;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -90,6 +91,7 @@ public class NotificationLibrary {
             email = IOUtils.toString(new ClassPathResource(emailTemplate).getInputStream(), "UTF-8");
         }catch(IOException e){
             System.out.println("Email Exception");
+            Sentry.capture(e);
             return 0;
         }
         try {
@@ -97,6 +99,7 @@ public class NotificationLibrary {
             email = formatMessage(email,values);
         }catch (Exception e){
             System.out.println(e);
+            Sentry.capture(e);
         }
         return InsertNotification(jdbcTemplate,"email",address,email,title);
     }
