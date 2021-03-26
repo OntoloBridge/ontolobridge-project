@@ -65,7 +65,7 @@ public class AuthController extends BaseController {
     @RequestMapping(path="/register", method= RequestMethod.POST, produces={"application/json"})
     public Object register(@ApiParam(value = "Email for user") @RequestParam(value="email",defaultValue = "")@NotBlank String email,
                            @ApiParam(value = "Email for user") @RequestParam(value="name",defaultValue = "")@NotBlank String name,
-                       @ApiParam(value = "User Password") @RequestParam(value="password",defaultValue = "") @NotBlank String password,
+                       @ApiParam(value = "User Password") @RequestParam(value="user_password",defaultValue = "") @NotBlank String password,
                        @ApiParam(value = "Anonymize Email") @RequestParam(value="anon",defaultValue = "false") boolean anonymize) throws OntoloException {
 
 
@@ -97,6 +97,10 @@ public class AuthController extends BaseController {
                 output.append(c.getMessage());
                 output.append("\r\n");
             }
+            return RestResponseExceptionHandler.generateResponse(400,output.toString(),HttpStatus.UNAUTHORIZED);
+        }catch(javax.validation.UnexpectedTypeException e){
+            StringBuilder output = new StringBuilder();
+            output.append("Error Processing Requests:\r\n");
             return RestResponseExceptionHandler.generateResponse(400,output.toString(),HttpStatus.UNAUTHORIZED);
         }
 
