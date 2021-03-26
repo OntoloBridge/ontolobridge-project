@@ -70,8 +70,9 @@ public class AuthController extends BaseController {
 
 
         if(userRepository.existsByEmail(email)) {
-            return new ResponseEntity<>(formatResultsWithoutCount("Email is already in use!"),
-                    HttpStatus.BAD_REQUEST);
+            StringBuilder output = new StringBuilder();
+            output.append("Email already in use\r\n");
+            return RestResponseExceptionHandler.generateResponse(400,output.toString(),HttpStatus.UNAUTHORIZED);
         }
 
         // Creating user's account
