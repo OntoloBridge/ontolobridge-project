@@ -86,7 +86,9 @@ public class AuthController extends BaseController {
 
         HashMap<String,Object> emailVariables = new HashMap<>();
         emailVariables.put("verification",vCode);
-        notLib.InsertEmail(JDBCTemplate,"/email/verificationTemplate.email",email,"Verification Email",emailVariables);
+        emailVariables.put("linkVerification",this.frontendURL+"/verify?verify="+vCode);
+        emailVariables.put("user_name",name);
+        notLib.InsertEmail(JDBCTemplate,"/emails/verificationTemplate.email",email,"Verification Email",emailVariables);
 
         try {
             userRepository.save(user);

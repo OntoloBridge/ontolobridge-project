@@ -32,6 +32,9 @@ public class BaseController {
     @Value("${api.cpanel.apitoken}")
     String cpanelApiKey;
 
+    @Value("${app.general.frontendURL}")
+    String frontendURL;
+
     @Autowired
     protected AppProperties appProp;
 

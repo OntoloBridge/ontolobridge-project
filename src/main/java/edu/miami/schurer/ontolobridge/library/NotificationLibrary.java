@@ -106,9 +106,13 @@ public class NotificationLibrary {
     public String formatMessage(String email, HashMap<String,Object> keys){
         for (Map.Entry<String, Object> entry : keys.entrySet()
         ) {
-            email = email.replace(entry.getKey(), entry.getValue().toString());
+            email = email.replace("__"+entry.getKey()+"__", entry.getValue().toString());
 
         }
+        email = email.replace("__ontEmail__", appProp.getsupportEmail());
+        email = email.replace("__site__", appProp.getSiteURL());
+        email = email.replace("__api__", appProp.getApiURL());
+        email = email.replace("__frontend__", appProp.getFrontendURL());
         return email;
 
     }

@@ -24,10 +24,19 @@ public class AppProperties {
         this.supportEmail = supportEmail;
     }
 
+    public void setFrontendURL(String frontendURL) {
+        this.frontendURL = frontendURL;
+    }
+
     /**
      * apikey of api services for website service
      */
     private String apiURL = "";
+
+    /**
+     * apikey of api services for website service
+     */
+    private String frontendURL = "";
 
     /**
      * the support email address people can contact
@@ -48,4 +57,7 @@ public class AppProperties {
         return supportEmail;
     }
 
+    public String getFrontendURL() {
+        return frontendURL;
+    }
 }
