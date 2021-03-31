@@ -9,6 +9,7 @@ import edu.miami.schurer.ontolobridge.models.Role;
 import edu.miami.schurer.ontolobridge.models.RoleName;
 import edu.miami.schurer.ontolobridge.models.User;
 import edu.miami.schurer.ontolobridge.utilities.JwtProvider;
+import io.sentry.Sentry;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
@@ -103,6 +104,7 @@ public class AuthController extends BaseController {
             return RestResponseExceptionHandler.generateResponse(400,output.toString(),HttpStatus.UNAUTHORIZED);
         }catch(javax.validation.UnexpectedTypeException e){
             StringBuilder output = new StringBuilder();
+            Sentry.capture(e);
             output.append("Error Processing Requests:\r\n");
             return RestResponseExceptionHandler.generateResponse(400,output.toString(),HttpStatus.UNAUTHORIZED);
         }
