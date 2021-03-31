@@ -24,6 +24,12 @@ public class NotificationLibrary {
         this.appProp = appProp;
     }
 
+    public void RemoveNotification(JdbcTemplate jdbcTemplate,Integer id){
+        List<Object> args = new ArrayList<>();
+        args.add(id);
+        jdbcTemplate.update("DELETE from notifications where id = ?",args.toArray());
+    }
+
     public int InsertNotification(JdbcTemplate jdbcTemplate,
                                   String notificationMethod,
                                   String address,

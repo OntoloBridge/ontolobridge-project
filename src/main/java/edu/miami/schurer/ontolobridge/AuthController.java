@@ -89,11 +89,12 @@ public class AuthController extends BaseController {
         emailVariables.put("verification",vCode);
         emailVariables.put("linkVerification",this.frontendURL+"/verify?verify="+vCode);
         emailVariables.put("user_name",name);
-        notLib.InsertEmail(JDBCTemplate,"/emails/verificationTemplate.email","Verification Email",email,emailVariables);
+        Integer notificationID = notLib.InsertEmail(JDBCTemplate,"/emails/verificationTemplate.email","Verification Email",email,emailVariables);
 
         try {
             userRepository.save(user);
         }catch(javax.validation.ConstraintViolationException e){
+            notLib.RemoveNotification(JDBCTemplate,notificationID); //We didn't register the user, remove the notification
             StringBuilder output = new StringBuilder();
             output.append("Error Processing Requests:\r\n");
             for(ConstraintViolation c: e.getConstraintViolations()){
@@ -103,6 +104,7 @@ public class AuthController extends BaseController {
             }
             return RestResponseExceptionHandler.generateResponse(400,output.toString(),HttpStatus.UNAUTHORIZED);
         }catch(javax.validation.UnexpectedTypeException e){
+            notLib.RemoveNotification(JDBCTemplate,notificationID); //We didn't register the user, remove the notification
             StringBuilder output = new StringBuilder();
             Sentry.capture(e);
             output.append("Error Processing Requests:\r\n");
