@@ -66,7 +66,7 @@ public class AuthController extends BaseController {
     @RequestMapping(path="/register", method= RequestMethod.POST, produces={"application/json"})
     public Object register(@ApiParam(value = "Email for user") @RequestParam(value="email",defaultValue = "")@NotBlank String email,
                            @ApiParam(value = "Email for user") @RequestParam(value="name",defaultValue = "")@NotBlank String name,
-                       @ApiParam(value = "User Password") @RequestParam(value="user_password",defaultValue = "") @NotBlank String password,
+                       @ApiParam(value = "User Password") @RequestParam(value="pswd",defaultValue = "") @NotBlank String pswd,
                        @ApiParam(value = "Anonymize Email") @RequestParam(value="anon",defaultValue = "false") boolean anonymize) throws OntoloException {
 
 
@@ -78,7 +78,7 @@ public class AuthController extends BaseController {
 
         // Creating user's account
         User user = new User(name,
-                email, encoder.encode(password)); //encode their password
+                email, encoder.encode(pswd)); //encode their password
 
         String vCode =genRandomString(10);
         HashSet<Detail> details =  new HashSet<>();
