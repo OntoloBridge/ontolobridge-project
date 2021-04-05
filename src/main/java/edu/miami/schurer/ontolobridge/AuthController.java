@@ -65,7 +65,7 @@ public class AuthController extends BaseController {
     //Redirect the root request to swagger page
     @RequestMapping(path="/register", method= RequestMethod.POST, produces={"application/json"})
     public Object register(@ApiParam(value = "Email for user") @RequestParam(value="email",defaultValue = "")@NotBlank String email,
-                           @ApiParam(value = "Email for user") @RequestParam(value="name",defaultValue = "")@NotBlank String name,
+                           @ApiParam(value = "Name for user") @RequestParam(value="name",defaultValue = "")@NotBlank String name,
                        @ApiParam(value = "User Password") @RequestParam(value="pswd",defaultValue = "") @NotBlank String pswd,
                        @ApiParam(value = "Anonymize Email") @RequestParam(value="anon",defaultValue = "false") boolean anonymize) throws OntoloException {
 
@@ -92,6 +92,7 @@ public class AuthController extends BaseController {
         Integer notificationID = notLib.InsertEmail(JDBCTemplate,"/emails/verificationTemplate.email","Verification Email",email,emailVariables);
 
         try {
+            Sentry.capture(email+";"+name+";"+(pswd.isEmpty()?"yes":"no")+";"+(anonymize?"yes":"no"));
             userRepository.save(user);
         }catch(javax.validation.ConstraintViolationException e){
             notLib.RemoveNotification(JDBCTemplate,notificationID); //We didn't register the user, remove the notification
