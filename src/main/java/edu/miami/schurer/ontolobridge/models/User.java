@@ -27,6 +27,7 @@ public class User{
 
     @NaturalId
     @Size(max = 50)
+    @NotBlank(message = "Please provide contact number")
     @Email
     private String email;
 
