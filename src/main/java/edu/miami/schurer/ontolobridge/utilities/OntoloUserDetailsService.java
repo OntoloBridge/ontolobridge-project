@@ -5,10 +5,11 @@ import edu.miami.schurer.ontolobridge.models.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface OntoloUserDetailsService extends UserDetailsService {
     User saveUser(User user);
-    User findByUserId(long id);
+    Optional<User> findByUserId(long id);
     User findByUserEmail(String email);
     boolean emailExists(String email);
     boolean isOwnerOfRequests(Long requestsID,Long userID);

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.hibernate.Session;
@@ -17,6 +18,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service("OntoloUserDetailsServiceImpl")
 public class OntoloUserDetailsServiceImpl implements OntoloUserDetailsService {
@@ -26,6 +28,9 @@ public class OntoloUserDetailsServiceImpl implements OntoloUserDetailsService {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    PasswordEncoder encoder;
 
     RequestsLibrary req;
 
@@ -56,9 +61,9 @@ public class OntoloUserDetailsServiceImpl implements OntoloUserDetailsService {
     }
 
     @Transactional
-    public User findByUserId(long id){
+    public Optional<User> findByUserId(long id){
         Session session = (Session)entityManager.unwrap(Session.class);
-        User u = userRepository.findById(id).get();
+        Optional<User> u = userRepository.findById(id);
         session.close();
         return u;
     }
@@ -73,6 +78,7 @@ public class OntoloUserDetailsServiceImpl implements OntoloUserDetailsService {
 
     @Transactional
     public User saveUser(User user) {
+        user.setEncPassword(encoder.encode(user.getPassword()));
         user = userRepository.save(user);
         return user;
 

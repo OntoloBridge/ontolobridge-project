@@ -14,6 +14,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.Authorization;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -31,7 +32,6 @@ import edu.miami.schurer.ontolobridge.utilities.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolation;
-import javax.validation.constraints.NotBlank;
 import java.time.Instant;
 import java.util.*;
 
@@ -45,7 +45,7 @@ public class AuthController extends BaseController {
     AuthenticationManager authenticationManager;
 
     @Autowired
-    UserRepository userRepository;
+    private OntoloUserDetailsService userService;
 
     @Autowired
     OntoloSecurityService securityService;
@@ -69,8 +69,7 @@ public class AuthController extends BaseController {
                        @ApiParam(value = "User Password") @RequestParam(value="pswd",defaultValue = "")  String pswd,
                        @ApiParam(value = "Anonymize Email") @RequestParam(value="anon",defaultValue = "false") boolean anonymize) throws OntoloException {
 
-
-        if(userRepository.existsByEmail(email)) {
+        if(userService.emailExists(email)) {
             StringBuilder output = new StringBuilder();
             output.append("Email already in use\r\n");
             return RestResponseExceptionHandler.generateResponse(400,output.toString(),HttpStatus.UNAUTHORIZED);
@@ -78,7 +77,7 @@ public class AuthController extends BaseController {
 
         // Creating user's account
         User user = new User(name,
-                email, encoder.encode(pswd)); //encode their password
+                email, pswd); //encode their password
 
         String vCode =genRandomString(10);
         HashSet<Detail> details =  new HashSet<>();
@@ -93,7 +92,7 @@ public class AuthController extends BaseController {
 
         try {
             //Sentry.capture(email+";"+name+";"+(pswd.isEmpty()?"yes":"no")+";"+(anonymize?"yes":"no"));
-            userRepository.save(user);
+            userService.saveUser(user);
         }catch(javax.validation.ConstraintViolationException e){
             notLib.RemoveNotification(JDBCTemplate,notificationID); //We didn't register the user, remove the notification
             StringBuilder output = new StringBuilder();
@@ -122,7 +121,7 @@ public class AuthController extends BaseController {
         }catch(EmptyResultDataAccessException e){
             throw new OntoloException("Code not Found",HttpStatus.BAD_REQUEST); //code not found throw error
         }
-        Optional<User> u = userRepository.findById(new Long(id));
+        Optional<User> u = userService.findByUserId(new Long(id));
         if(!u.isPresent()){
             throw new OntoloException("User not found",HttpStatus.BAD_REQUEST); //user not found, throw error. SHOULD NEVER HAPPEN
         }
@@ -137,7 +136,7 @@ public class AuthController extends BaseController {
         roles.add(verifiedRole);
         user.setRoles(roles); //give the new user the role of user
 
-        userRepository.save(user); //save user
+        userService.saveUser(user); //save user
         return formatResultsWithoutCount("Email Verified");
     }
 
@@ -182,7 +181,7 @@ public class AuthController extends BaseController {
     @PreAuthorize("isAuthenticated()")
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public Object CheckUserDetails(){
-        User user =  userRepository.findById(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
+        User user =  userService.findByUserId(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
         Set<Detail> details = user.getDetails();
         List<Map<String,Object>> requiredDetails = auth.GetAllDetails();
         List<Map<String,Object>> missingDetails = new ArrayList<>(requiredDetails);

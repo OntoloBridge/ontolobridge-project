@@ -4,11 +4,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.validator.constraints.Email;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Entity
@@ -34,6 +34,9 @@ public class User{
     @Size(min=6, max = 100)
     private String password;
 
+    @Transient
+    private boolean encrypted = true;
+
     @OneToMany( fetch = FetchType.EAGER,
             cascade = CascadeType.ALL,
             orphanRemoval=true)
@@ -51,8 +54,10 @@ public class User{
     public User(String name, String email, String password) {
         this.name = name;
         this.email = email;
+        this.encrypted = false;
         this.password = password;
     }
+
 
     public Long getId() {
         return id;
@@ -83,7 +88,15 @@ public class User{
     }
 
     public void setPassword(String password) {
+        this.encrypted = false;
         this.password = password;
+    }
+
+    public void setEncPassword(String password) {
+        if(!this.encrypted) {
+            this.encrypted = true;
+            this.password = password;
+        }
     }
 
     public Set<Detail> getDetails() {

@@ -10,6 +10,7 @@ import edu.miami.schurer.ontolobridge.utilities.UserPrinciple;
 import io.sentry.Sentry;
 import io.swagger.annotations.*;
 import org.apache.commons.io.IOUtils;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -24,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotBlank;
 import java.io.IOException;
 import java.util.*;
 
@@ -76,7 +76,7 @@ public class UserController extends BaseController {
                                            @ApiParam(value = "password") @RequestParam(value="password", defaultValue = "") @NotBlank String password) {
        Long userID = userService.verifyPasswordReset(token);
        if(userID != null){
-           User user = userService.findByUserId(userID);
+           User user = userService.findByUserId(userID).get();
            user.setPassword(encoder.encode(password));
            Set<Detail> details = user.getDetails();
            //remove the reset_key to prevent reuse
@@ -99,7 +99,7 @@ public class UserController extends BaseController {
             allowedDetails.add(m.get("field").toString());
         }
 
-        User user =  userService.findByUserId(((UserPrinciple) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId());
+        User user =  userService.findByUserId(((UserPrinciple) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
         user.setPassword(encoder.encode(password));
         userService.saveUser(user);
         return new OperationResponse("success",true,user.getId());
@@ -117,7 +117,7 @@ public class UserController extends BaseController {
         }
 
 
-        User user =  userService.findByUserId(((UserPrinciple) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId());
+        User user =  userService.findByUserId(((UserPrinciple) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
 
         //Set privileged fields
 
@@ -180,7 +180,7 @@ public class UserController extends BaseController {
     @RequestMapping(path="/details", method= RequestMethod.GET, produces={"application/json"})
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public UserResponse GetDetails(){
-        User user =  userService.findByUserId(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId());
+        User user =  userService.findByUserId(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
         return new UserResponse(user);
     }
 
@@ -188,7 +188,7 @@ public class UserController extends BaseController {
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public Object roles(){
         List<String> roles = new ArrayList<>();
-        User user =  userService.findByUserId(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId());
+        User user =  userService.findByUserId(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
         for(Role r:user.getRoles()){
             roles.add(r.getName().toString());
         }

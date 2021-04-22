@@ -4,6 +4,7 @@ import edu.miami.schurer.ontolobridge.Responses.*;
 import edu.miami.schurer.ontolobridge.library.NotificationLibrary;
 import edu.miami.schurer.ontolobridge.utilities.OntoloException;
 import io.swagger.annotations.*;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.constraints.NotBlank;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
