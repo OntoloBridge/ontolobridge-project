@@ -60,9 +60,9 @@ public class UserController extends BaseController {
                 System.out.println("Email Exception");
                 Sentry.capture(e);
             }
-            stringReplace.put("__user_name__",user.getName());
-            stringReplace.put("__ontEmail__",this.appProp.getsupportEmail());
-            stringReplace.put("__reset_url__",this.appProp.getSiteURL()+"/reset_password?token="+key);
+            stringReplace.put("user_name",user.getName());
+            stringReplace.put("ontEmail",this.appProp.getsupportEmail());
+            stringReplace.put("reset_url",this.appProp.getSiteURL()+"/reset_password?token="+key);
             email = notLib.formatMessage(email,stringReplace);
             notLib.InsertNotification(JDBCTemplate, "email", user.getEmail(), email, "Ontolobridge - Password Reset Requests");
             userService.saveUser(user);
