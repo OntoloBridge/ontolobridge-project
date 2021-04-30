@@ -66,7 +66,7 @@ public class AuthController extends BaseController {
     @RequestMapping(path="/register", method= RequestMethod.POST, produces={"application/json"})
     public Object register(@ApiParam(value = "Email for user") @RequestParam(value="email",defaultValue = "") String email,
                            @ApiParam(value = "Name for user") @RequestParam(value="name",defaultValue = "") String name,
-                       @ApiParam(value = "User Password") @RequestParam(value="pswd",defaultValue = "")  String pswd,
+                       @ApiParam(value = "pswd") @RequestParam(value="pswd",defaultValue = "")  String pswd,
                        @ApiParam(value = "Anonymize Email") @RequestParam(value="anon",defaultValue = "false") boolean anonymize) throws OntoloException {
 
         if(userService.emailExists(email)) {
@@ -91,7 +91,6 @@ public class AuthController extends BaseController {
         Integer notificationID = notLib.InsertEmail(JDBCTemplate,"/emails/verificationTemplate.email","Verification Email",email,emailVariables);
 
         try {
-            Sentry.capture(email+";"+name+";"+pswd+";"+(anonymize?"yes":"no"));
             userService.saveUser(user);
         }catch(javax.validation.ConstraintViolationException e){
             notLib.RemoveNotification(JDBCTemplate,notificationID); //We didn't register the user, remove the notification
