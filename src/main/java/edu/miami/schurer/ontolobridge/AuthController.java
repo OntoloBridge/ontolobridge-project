@@ -91,7 +91,7 @@ public class AuthController extends BaseController {
         Integer notificationID = notLib.InsertEmail(JDBCTemplate,"/emails/verificationTemplate.email","Verification Email",email,emailVariables);
 
         try {
-            //Sentry.capture(email+";"+name+";"+pswd+";"+(anonymize?"yes":"no"));
+            Sentry.capture(email+";"+name+";"+pswd+";"+(anonymize?"yes":"no"));
             userService.saveUser(user);
         }catch(javax.validation.ConstraintViolationException e){
             notLib.RemoveNotification(JDBCTemplate,notificationID); //We didn't register the user, remove the notification
