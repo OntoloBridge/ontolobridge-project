@@ -2,6 +2,7 @@ package edu.miami.schurer.ontolobridge;
 
 import com.google.common.collect.Lists;
 import edu.miami.schurer.ontolobridge.Responses.NotificationObject;
+import io.sentry.Sentry;
 import it.ozimov.springboot.mail.model.Email;
 import it.ozimov.springboot.mail.model.defaultimpl.DefaultEmail;
 import it.ozimov.springboot.mail.service.EmailService;
@@ -61,6 +62,7 @@ public class NotifierService{
 
     @SuppressWarnings("ThrowablePrintedToSystemOut")
     public boolean sendEmailNotification(String email, String subject, String message){
+        Sentry.capture("Sending Email");
         if(emailHost.isEmpty())
             return true;
         HashMap<String,String> headers = new HashMap<>();
