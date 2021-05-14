@@ -62,7 +62,6 @@ public class NotifierService{
 
     @SuppressWarnings("ThrowablePrintedToSystemOut")
     public boolean sendEmailNotification(String email, String subject, String message){
-        Sentry.capture("Sending Email");
         if(emailHost.isEmpty())
             return true;
         HashMap<String,String> headers = new HashMap<>();
