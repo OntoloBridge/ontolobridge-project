@@ -14,6 +14,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -74,8 +75,13 @@ public class UserController extends BaseController {
     public OperationResponse resetPassword(HttpServletRequest r,
                                            @ApiParam(value = "token") @RequestParam(value="token", defaultValue = "") @NotBlank String token,
                                            @ApiParam(value = "password") @RequestParam(value="password", defaultValue = "") @NotBlank String password) {
-       Long userID = userService.verifyPasswordReset(token);
-       if(userID != null){
+        Long userID;
+        try {
+           userID = userService.verifyPasswordReset(token);
+        }catch (EmptyResultDataAccessException e){
+           return new OperationResponse("token not found",false,0);
+        }
+        if(userID != null){
            User user = userService.findByUserId(userID).get();
            user.setPassword(encoder.encode(password));
            Set<Detail> details = user.getDetails();
@@ -83,10 +89,10 @@ public class UserController extends BaseController {
            details.removeIf(m -> m.getField().equals("reset_key"));
            user.setDetails(details);
            userService.saveUser(user);
-       }else{
+        }else{
            return new OperationResponse("incorrect token",false,0);
-       }
-       return new OperationResponse("success",true,0);
+        }
+        return new OperationResponse("success",true,0);
     }
 
     @RequestMapping(path="/password", method= RequestMethod.POST, produces={"application/json"})
@@ -216,7 +222,7 @@ public class UserController extends BaseController {
             @ApiResponse(code = 500, message = "Internal server error", response = ExceptionResponse.class)
     }
     )
-    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and hasRole(\"ROLE_CURATOR\")")
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication)")
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     @RequestMapping(path="/RequestStatus", method= RequestMethod.GET)
     public FullStatusResponse termStatus(@ApiParam(value = "ID of requests",example = "0") @RequestParam(value="requestID") Integer id){

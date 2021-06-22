@@ -5,6 +5,7 @@ import edu.miami.schurer.ontolobridge.library.RequestsLibrary;
 import edu.miami.schurer.ontolobridge.models.*;
 import edu.miami.schurer.ontolobridge.library.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -121,7 +122,7 @@ public class OntoloUserDetailsServiceImpl implements OntoloUserDetailsService {
         }
         return results;
     }
-    public Long verifyPasswordReset(String token){
+    public Long verifyPasswordReset(String token) throws EmptyResultDataAccessException {
         List<Object> args = new ArrayList<>();
         args.add(token);
         Long userID = jdbcTemplate.queryForObject("select user_id from user_details where field = 'reset_key' and value = ?",args.toArray(),Long.class);
