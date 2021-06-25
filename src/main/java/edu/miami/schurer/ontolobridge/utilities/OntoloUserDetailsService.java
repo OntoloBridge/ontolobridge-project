@@ -2,9 +2,12 @@ package edu.miami.schurer.ontolobridge.utilities;
 
 import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
 import edu.miami.schurer.ontolobridge.models.User;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface OntoloUserDetailsService extends UserDetailsService {
@@ -15,5 +18,10 @@ public interface OntoloUserDetailsService extends UserDetailsService {
     boolean isOwnerOfRequests(Long requestsID,Long userID);
     boolean isMaintainerOfRequests(Long requestsID,Long userID);
     List<StatusResponse> getMaintainerRequests(Long userid);
-    public Long verifyPasswordReset(String token);
+    Long verifyPasswordReset(String token);
+
+    List<Map<String,Object>> getAppPass(Long userid);
+    Long checkAppPass(String token);
+    String addAppPass(Long userid,String App,String comment);
+    void deleteAppPass(Long id, Long user_id);
 }

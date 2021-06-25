@@ -43,6 +43,10 @@ public class OntoloSecurityService {
         return isRegisteredCheck(userID);
     }
 
+    public boolean isNotToken(Authentication authentication) {
+        return !((UserPrinciple) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).isTokenLogin(); //cache using user ID
+    }
+
     //Function split to allow caching based on user id
     @Cacheable(value = "userRegistered")
     public boolean isRegisteredCheck(Long userID) {

@@ -19,7 +19,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+
+import static edu.miami.schurer.ontolobridge.utilities.DbUtil.genRandomString;
 
 @Service("OntoloUserDetailsServiceImpl")
 public class OntoloUserDetailsServiceImpl implements OntoloUserDetailsService {
@@ -125,7 +128,38 @@ public class OntoloUserDetailsServiceImpl implements OntoloUserDetailsService {
     public Long verifyPasswordReset(String token) throws EmptyResultDataAccessException {
         List<Object> args = new ArrayList<>();
         args.add(token);
-        Long userID = jdbcTemplate.queryForObject("select user_id from user_details where field = 'reset_key' and value = ?",args.toArray(),Long.class);
-        return userID;
+        return jdbcTemplate.queryForObject("select user_id from user_details where field = 'reset_key' and value = ?",args.toArray(),Long.class);
+    }
+
+    public List<Map<String,Object>> getAppPass(Long userid) throws EmptyResultDataAccessException {
+        List<Object> args = new ArrayList<>();
+        args.add(userid);
+        return jdbcTemplate.queryForList("select id,app,create_date,comment from application_passwords where user_id =  ?",args.toArray());
+    }
+
+    public Long checkAppPass(String token) throws EmptyResultDataAccessException {
+        List<Object> args = new ArrayList<>();
+        args.add(token);
+        return jdbcTemplate.queryForObject("select application_passwords.user_id from application_passwords where application_passwords.password = ?",args.toArray(),Long.class);
+    }
+
+
+    public String addAppPass(Long userid,String App,String comment){
+        List<Object> args = new ArrayList<>();
+        String Password = "";
+        Password = genRandomString(32);
+        args.add(userid);
+        args.add(App);
+        args.add(comment);
+        args.add(Password);
+        jdbcTemplate.update("insert into application_passwords (user_id, app, comment, password) VALUES (?,?,?,?);",args.toArray());
+        return Password;
+    }
+
+    public void deleteAppPass(Long id,Long user_id){
+        List<Object> args = new ArrayList<>();
+        args.add(id);
+        args.add(user_id);
+        jdbcTemplate.update("delete from application_passwords where id = ? and user_id = ?",args);
     }
 }

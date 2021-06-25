@@ -20,6 +20,8 @@ public class UserPrinciple implements UserDetails {
 
     private String email;
 
+    private boolean tokenLogin = false;
+
     @JsonIgnore
     private String password;
 
@@ -102,5 +104,13 @@ public class UserPrinciple implements UserDetails {
 
         UserPrinciple user = (UserPrinciple) o;
         return Objects.equals(id, user.id);
+    }
+
+    public boolean isTokenLogin() {
+        return tokenLogin;
+    }
+
+    public void setTokenLogin(boolean tokenLogin) {
+        this.tokenLogin = tokenLogin;
     }
 }

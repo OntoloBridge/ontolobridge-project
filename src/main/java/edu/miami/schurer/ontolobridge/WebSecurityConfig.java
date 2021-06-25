@@ -31,6 +31,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new JwtAuthTokenFilter();
     }
 
+    @Bean
+    public AppTokenFilter authenticationAppTokenFilter() {
+        return new AppTokenFilter();
+    }
+
     @Override
     public void configure(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {
         authenticationManagerBuilder
@@ -57,5 +62,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(authenticationAppTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 }

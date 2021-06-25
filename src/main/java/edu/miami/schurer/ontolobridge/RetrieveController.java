@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -34,7 +35,8 @@ public class RetrieveController extends BaseController {
     }
     )
     @RequestMapping(path="/Requests", method= RequestMethod.GET)
-    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    @PreAuthorize("isAuthenticated()")
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken"),@Authorization(value="token") })
     public @ResponseBody ResponseEntity requestTerm(@ApiParam(value = "Ontology to get new terms for" ,required = true) @RequestParam(value="ontology") String ontology,
                                @ApiParam(value = "Minimum status to return",defaultValue = " ",required = false) @RequestParam(value="status") String status,
                                @ApiParam(value = "Type of request to return to return",defaultValue = " ",required = false) @RequestParam(value="type") String type ) throws OntoloException {
@@ -131,7 +133,7 @@ public class RetrieveController extends BaseController {
     }
 
     @RequestMapping(path="/ontologies", method= RequestMethod.GET)
-    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    @PreAuthorize("permitAll()")
     public List<Map<String, Object>> requestOntologies() throws OntoloException {
         return req.GetAllOntologies();
     }

@@ -70,6 +70,7 @@ public class UserController extends BaseController {
         }
         return new OperationResponse("success",true,0);
     }
+
     @RequestMapping(path="/reset_password", method= RequestMethod.GET, produces={"application/json"})
     @PreAuthorize("permitAll()")
     public OperationResponse resetPassword(HttpServletRequest r,
@@ -96,6 +97,7 @@ public class UserController extends BaseController {
     }
 
     @RequestMapping(path="/password", method= RequestMethod.POST, produces={"application/json"})
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and @OntoloSecurityService.isNotToken(authentication)")
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public OperationResponse updatePassword(HttpServletRequest r,
                                             @ApiParam(value = "User Password") @RequestParam(value="password", defaultValue = "") @NotBlank String password) {
@@ -112,6 +114,7 @@ public class UserController extends BaseController {
     }
 
     @RequestMapping(path="/details", method= RequestMethod.POST, produces={"application/json"})
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and @OntoloSecurityService.isNotToken(authentication)")
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public Object updateDetails(HttpServletRequest r,
                                            @ApiParam(value = "Field being Changed") @RequestParam(value="fields",defaultValue = "")@NotBlank List<String> Fields,
@@ -184,6 +187,7 @@ public class UserController extends BaseController {
     }
 
     @RequestMapping(path="/details", method= RequestMethod.GET, produces={"application/json"})
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and @OntoloSecurityService.isNotToken(authentication)")
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public UserResponse GetDetails(){
         User user =  userService.findByUserId(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
@@ -201,12 +205,36 @@ public class UserController extends BaseController {
         return roles;
     }
 
-    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication)")
     @RequestMapping(path="/requests", method= RequestMethod.GET, produces={"application/json"})
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public Object GetRequests(){
         Long id =((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
         return req.TermStatus(id,"user");
+    }
+
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and @OntoloSecurityService.isNotToken(authentication)")
+    @RequestMapping(path="/app_token", method= RequestMethod.GET, produces={"application/json"})
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken")})
+    public Object GetAppPasswords(){
+        Long id =((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
+        return formatResults(userService.getAppPass(id),"passwords");
+    }
+
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and @OntoloSecurityService.isNotToken(authentication)")
+    @RequestMapping(path="/app_token", method= RequestMethod.POST, produces={"application/json"})
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    public Object PutAppPasswords(String app, String comment){
+        Long id =((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
+        return formatResults(userService.addAppPass(id,app,comment),"password");
+    }
+
+
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and @OntoloSecurityService.isNotToken(authentication)")
+    @RequestMapping(path="/app_token", method= RequestMethod.DELETE, produces={"application/json"})
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    public Object DeleteAppPasswords(Long id){
+        Long user_id =((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
+        userService.deleteAppPass(id,user_id);
     }
 
     @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and hasRole(\"ROLE_CURATOR\")")
@@ -217,6 +245,8 @@ public class UserController extends BaseController {
 
         return userService.getMaintainerRequests(id);
     }
+
+
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successful requests",response = StatusResponse.class),
             @ApiResponse(code = 500, message = "Internal server error", response = ExceptionResponse.class)
@@ -238,7 +268,7 @@ public class UserController extends BaseController {
 
     }
 
-    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and hasRole(\"ROLE_CURATOR\")")
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication)")
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     @RequestMapping(path="/RequestHistory", method= RequestMethod.GET)
     public List<Map<String,Object>> termHistory(@ApiParam(value = "ID of requests",example = "0") @RequestParam(value="requestID") Integer id){

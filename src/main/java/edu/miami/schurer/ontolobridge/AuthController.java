@@ -158,9 +158,9 @@ public class AuthController extends BaseController {
         return ResponseEntity.ok(new JwtResponse(jwt, authentication.getName()));
     }
 
-    @RequestMapping(path="/checkToken", method= RequestMethod.GET, produces={"application/json"})
+    @RequestMapping(path="/checkJWTToken", method= RequestMethod.GET, produces={"application/json"})
     @PreAuthorize("isAuthenticated()")
-    public Object checkToken(){
+    public Object checkJWTToken(){
         if(!securityService.isRegistered(SecurityContextHolder.getContext().getAuthentication())){
             Map<String,Object> responseBody = new HashMap<>();
             responseBody.put("error",5);

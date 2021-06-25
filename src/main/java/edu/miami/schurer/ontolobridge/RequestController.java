@@ -36,7 +36,7 @@ public class RequestController extends BaseController {
         }
     )
     @RequestMapping(path="/RequestTerm", method= RequestMethod.POST)
-    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+
     public Object requestTerm(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") @NotBlank String label,
                               @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") @NotBlank String description,
                               @ApiParam(value = "Parent URI of suggested term",required = true) @RequestParam(value="superclass") @NotBlank String uri_superclass,
@@ -70,7 +70,7 @@ public class RequestController extends BaseController {
     }
 
     @RequestMapping(path="/RequestDataProperty", method= RequestMethod.POST)
-    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken"),@Authorization(value="token") })
     public Object requestDataProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
                               @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
                               @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="parent_uri") String uri_superclass,
@@ -105,7 +105,7 @@ public class RequestController extends BaseController {
     }
 
     @RequestMapping(path="/RequestObjectProperty", method= RequestMethod.POST)
-    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken"),@Authorization(value="token") })
     public Object requestObjectProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
                                       @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
                                       @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="parent_uri") String uri_superclass,
@@ -138,7 +138,7 @@ public class RequestController extends BaseController {
     }
 
     @RequestMapping(path="/RequestAnnotationProperty", method= RequestMethod.POST)
-    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken"),@Authorization(value="token") })
     public Object requestAnnotationProperty(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") String label,
                                         @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") String description,
                                         @ApiParam(value = "Superclass of suggested term",required = true) @RequestParam(value="parent_uri") String uri_superclass,
@@ -196,7 +196,7 @@ public class RequestController extends BaseController {
     }
     )
     @RequestMapping(path="/RequestsSetStatus", method= RequestMethod.POST)
-    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken"),@Authorization(value="token") })
     public Object termStatus(@ApiParam(value = "ID of Forms" ,required = true,example = "0") @RequestParam(value="requestID") Integer id,
                              @ApiParam(value = "New Status" ,required = true,allowableValues = "submitted,accepted,requires-response,rejected") @RequestParam(value="status")String status,
                              @ApiParam(value = "Message of status" ) @RequestParam(value="message",defaultValue = "")String message){
@@ -210,7 +210,7 @@ public class RequestController extends BaseController {
     }
     )
     @RequestMapping(path="/UpdateRequest", method= RequestMethod.POST)
-    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken"),@Authorization(value="token") })
     public Object updateTerm(@RequestParam Map<String, String> parameters ){
         if(parameters.containsKey("id") && !parameters.get("id").isEmpty())
             return req.TermUpdate(parameters.get("id"),parameters);

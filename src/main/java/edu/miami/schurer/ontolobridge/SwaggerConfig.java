@@ -59,7 +59,7 @@ public class SwaggerConfig extends WebMvcConfigurationSupport{
         }
         return dock.build()
                 .apiInfo(apiInfo())
-                .securitySchemes(Lists.newArrayList(apiKey()))
+                .securitySchemes(Lists.newArrayList(apiToken(),jwtToken()))
                 .produces(new HashSet<String>(Arrays.asList("application/json")));
     }
 
@@ -73,8 +73,12 @@ public class SwaggerConfig extends WebMvcConfigurationSupport{
                 "License of API", "API license URL", Collections.emptyList());
     }
 
-    private ApiKey apiKey() {
+    private ApiKey jwtToken() {
         return new ApiKey("jwtToken", "Authorization", "header");
+    }
+
+    private ApiKey apiToken() {
+        return new ApiKey("token", "Authorization", "header");
     }
 
     @Override
