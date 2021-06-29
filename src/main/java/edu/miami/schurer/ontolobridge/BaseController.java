@@ -8,6 +8,7 @@ import edu.miami.schurer.ontolobridge.models.Role;
 import edu.miami.schurer.ontolobridge.models.RoleName;
 import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import edu.miami.schurer.ontolobridge.utilities.OntoloException;
+import edu.miami.schurer.ontolobridge.utilities.OntoloSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -42,6 +43,9 @@ public class BaseController {
     public OntologyManagerService Manager;
 
     @Autowired
+    OntoloSecurityService securityService;
+
+    @Autowired
     public NotifierService notifier;
 
     NotificationLibrary notLib ;
@@ -57,7 +61,7 @@ public class BaseController {
     void Init(){
         notLib = new NotificationLibrary(appProp);
         auth = new AuthLibrary(JDBCTemplate);
-        req = new RequestsLibrary(JDBCTemplate,cpanelApiKey,notifier,Manager,notLib,appProp);
+        req = new RequestsLibrary(JDBCTemplate,cpanelApiKey,notifier,Manager,notLib,appProp,securityService);
         Logger logger = Logger.getLogger("org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver");
         logger.setLevel(Level.SEVERE);
 

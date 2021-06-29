@@ -5,6 +5,7 @@ import edu.miami.schurer.ontolobridge.models.User;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +22,7 @@ public interface OntoloUserDetailsService extends UserDetailsService {
     Long verifyPasswordReset(String token);
 
     List<Map<String,Object>> getAppPass(Long userid);
-    Long checkAppPass(String token);
-    String addAppPass(Long userid,String App,String comment);
+    Long checkAppPass(String token) throws NoSuchAlgorithmException;
+    String addAppPass(Long userid,String App,String comment) throws NoSuchAlgorithmException;
     void deleteAppPass(Long id, Long user_id);
 }

@@ -4,6 +4,7 @@ import edu.miami.schurer.ontolobridge.library.RequestsLibrary;
 
 import edu.miami.schurer.ontolobridge.models.*;
 import edu.miami.schurer.ontolobridge.library.*;
+import io.sentry.Sentry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -17,10 +18,10 @@ import org.hibernate.Session;
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 
 import static edu.miami.schurer.ontolobridge.utilities.DbUtil.genRandomString;
 
@@ -45,11 +46,24 @@ public class OntoloUserDetailsServiceImpl implements OntoloUserDetailsService {
                 null,
                 null,
                 null,
+                null,
                 null);
     }
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    private static String bytesToHex(byte[] hash) {
+        StringBuilder hexString = new StringBuilder(2 * hash.length);
+        for (int i = 0; i < hash.length; i++) {
+            String hex = Integer.toHexString(0xff & hash[i]);
+            if(hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
 
     @Override
     @Transactional
@@ -140,18 +154,56 @@ public class OntoloUserDetailsServiceImpl implements OntoloUserDetailsService {
     public Long checkAppPass(String token) throws EmptyResultDataAccessException {
         List<Object> args = new ArrayList<>();
         args.add(token);
+        Long id = 0L;
+        //check if the application password was added manually and update it to a secure version
+        try {
+           id = jdbcTemplate.queryForObject("select application_passwords.id from application_passwords where application_passwords.password = ?", args.toArray(), Long.class);
+        } catch (EmptyResultDataAccessException ignored){
+
+        }
+        byte[] hash;
+        if(id != null && 0 != id){
+            args = new ArrayList<>();
+
+            try {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            }catch (NoSuchAlgorithmException ex){
+                System.out.println("NO SHA256");
+                Sentry.capture(ex);
+                return 0L;
+
+            }
+            args.add("$"+bytesToHex(hash));
+            args.add(id);
+            jdbcTemplate.update("UPDATE application_passwords set password = ? where id = ?",args.toArray());
+            args = new ArrayList<>();
+        }
+        args = new ArrayList<>();
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+        }catch (NoSuchAlgorithmException ex){
+            System.out.println("NO SHA256");
+            Sentry.capture(ex);
+            return 0L;
+
+        }
+        args.add("$"+bytesToHex(hash));
         return jdbcTemplate.queryForObject("select application_passwords.user_id from application_passwords where application_passwords.password = ?",args.toArray(),Long.class);
     }
 
 
-    public String addAppPass(Long userid,String App,String comment){
+    public String addAppPass(Long userid,String App,String comment) throws NoSuchAlgorithmException {
         List<Object> args = new ArrayList<>();
         String Password = "";
         Password = genRandomString(32);
         args.add(userid);
         args.add(App);
         args.add(comment);
-        args.add(Password);
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hash = digest.digest(Password.getBytes(StandardCharsets.UTF_8));
+        args.add("$"+bytesToHex(hash));
         jdbcTemplate.update("insert into application_passwords (user_id, app, comment, password) VALUES (?,?,?,?);",args.toArray());
         return Password;
     }

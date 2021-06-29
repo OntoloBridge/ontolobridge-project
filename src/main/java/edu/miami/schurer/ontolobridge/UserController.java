@@ -225,7 +225,11 @@ public class UserController extends BaseController {
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public Object PutAppPasswords(String app, String comment){
         Long id =((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
-        return formatResults(userService.addAppPass(id,app,comment),"password");
+        try {
+            return formatResults(userService.addAppPass(id, app, comment), "password");
+        }catch (Exception ex){
+            return formatResults(false);
+        }
     }
 
 

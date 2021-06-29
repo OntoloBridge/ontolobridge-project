@@ -36,7 +36,7 @@ public class RequestController extends BaseController {
         }
     )
     @RequestMapping(path="/RequestTerm", method= RequestMethod.POST)
-
+    @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken"),@Authorization(value="token") })
     public Object requestTerm(@ApiParam(value = "Label of suggested term" ,required = true) @RequestParam(value="label") @NotBlank String label,
                               @ApiParam(value = "Description of suggested term",required = true) @RequestParam(value="description") @NotBlank String description,
                               @ApiParam(value = "Parent URI of suggested term",required = true) @RequestParam(value="superclass") @NotBlank String uri_superclass,

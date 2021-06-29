@@ -4,5 +4,6 @@ public enum  RoleName {
     ROLE_USER,
     ROLE_CURATOR,
     ROLE_ADMIN,
-    ROLE_VERIFIED
+    ROLE_VERIFIED,
+    ROLE_SYSTEM
 }

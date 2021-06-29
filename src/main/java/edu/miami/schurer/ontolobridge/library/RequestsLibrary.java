@@ -10,6 +10,7 @@ import edu.miami.schurer.ontolobridge.Responses.StatusResponse;
 import edu.miami.schurer.ontolobridge.models.Ontology;
 import edu.miami.schurer.ontolobridge.utilities.AppProperties;
 import edu.miami.schurer.ontolobridge.utilities.DbUtil;
+import edu.miami.schurer.ontolobridge.utilities.OntoloSecurityService;
 import edu.miami.schurer.ontolobridge.utilities.UserPrinciple;
 import io.sentry.Sentry;
 import org.apache.commons.io.IOUtils;
@@ -41,6 +42,7 @@ public class RequestsLibrary {
     private NotifierService notifier;
 
     private AppProperties appProp;
+    private OntoloSecurityService ontoloSecurity;
 
 
     NotificationLibrary notLib ;
@@ -51,13 +53,15 @@ public class RequestsLibrary {
                            NotifierService notifier,
                            OntologyManagerService Manager,
                            NotificationLibrary notLib,
-                           AppProperties appProp){
+                           AppProperties appProp,
+                           OntoloSecurityService ontoloSecurity){
         this.jdbcTemplate = template;
         this.cpanelApiKey = cpanelApiKey;
         this.appProp = appProp;
         this.notifier = notifier;
         this.Manager = Manager;
         this.notLib = notLib;
+        this.ontoloSecurity = ontoloSecurity;
     }
     private String genRandomEmail() {
         return genRandomString(10)+"@ontolobridge.org";
@@ -181,7 +185,12 @@ public class RequestsLibrary {
             args.add(reference);
             args.add(justification);
             args.add(submitter);
-            args.add(submitter_email);
+            //use user email if they are not a system account
+            if(ontoloSecurity.hasRole("SYSTEM") ){
+                args.add(submitter_email);
+            }else{
+                args.add(((UserPrinciple) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getEmail());
+            }
             args.add(notify ? 1 : 0);
             args.add(requestType);
             args.add(ontology.isEmpty() ? "" : ontology);
