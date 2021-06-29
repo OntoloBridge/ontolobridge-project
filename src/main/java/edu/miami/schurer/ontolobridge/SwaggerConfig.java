@@ -44,7 +44,7 @@ public class SwaggerConfig extends WebMvcConfigurationSupport{
                         if(activeProfile.equals("prod"))
                             return "/api";
                         else
-                            return "/";
+                            return "/api-test";
 
                     }
                 })

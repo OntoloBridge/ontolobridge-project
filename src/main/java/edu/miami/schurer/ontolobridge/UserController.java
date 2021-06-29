@@ -232,7 +232,7 @@ public class UserController extends BaseController {
     @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and @OntoloSecurityService.isNotToken(authentication)")
     @RequestMapping(path="/app_token", method= RequestMethod.DELETE, produces={"application/json"})
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
-    public Object DeleteAppPasswords(Long id){
+    public void DeleteAppPasswords(Long id){
         Long user_id =((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
         userService.deleteAppPass(id,user_id);
     }
