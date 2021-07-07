@@ -97,7 +97,7 @@ public class UserController extends BaseController {
     }
 
     @RequestMapping(path="/password", method= RequestMethod.POST, produces={"application/json"})
-    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and @OntoloSecurityService.isNotToken(authentication)")
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isNotToken(authentication)")
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public OperationResponse updatePassword(HttpServletRequest r,
                                             @ApiParam(value = "User Password") @RequestParam(value="password", defaultValue = "") @NotBlank String password) {
@@ -114,7 +114,7 @@ public class UserController extends BaseController {
     }
 
     @RequestMapping(path="/details", method= RequestMethod.POST, produces={"application/json"})
-    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and @OntoloSecurityService.isNotToken(authentication)")
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isNotToken(authentication)")
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public Object updateDetails(HttpServletRequest r,
                                            @ApiParam(value = "Field being Changed") @RequestParam(value="fields",defaultValue = "")@NotBlank List<String> Fields,
@@ -187,7 +187,7 @@ public class UserController extends BaseController {
     }
 
     @RequestMapping(path="/details", method= RequestMethod.GET, produces={"application/json"})
-    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isRegistered(authentication) and @OntoloSecurityService.isNotToken(authentication)")
+    @PreAuthorize("isAuthenticated() and @OntoloSecurityService.isNotToken(authentication)")
     @ApiOperation(value = "", authorizations = { @Authorization(value="jwtToken") })
     public UserResponse GetDetails(){
         User user =  userService.findByUserId(((UserPrinciple)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId()).get();
