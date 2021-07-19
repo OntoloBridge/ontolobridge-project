@@ -89,9 +89,11 @@ public class OntoloUserDetailsServiceImpl implements OntoloUserDetailsService {
     @Transactional @Override
     public User findByUserEmail(String email) {
         Session session = (Session)entityManager.unwrap(Session.class);
-        User u = userRepository.findByEmail(email).get();
+        Optional<User> u = userRepository.findByEmail(email);
+        if(!u.isPresent())
+            return null;
         session.close();
-        return u;
+        return u.get();
     }
 
     @Transactional

@@ -4,10 +4,12 @@ public class JwtResponse {
     private String token;
     private String type = "Bearer";
     private String username;
+    private long id;
 
-    public JwtResponse(String accessToken,String username) {
+    public JwtResponse(String accessToken,String username,long id) {
         this.token = accessToken;
         this.username = username;
+        this.id = id;
     }
 
     public String getAccessToken() {
@@ -32,5 +34,13 @@ public class JwtResponse {
 
     public void setTokenType(String tokenType) {
         this.type = tokenType;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 }

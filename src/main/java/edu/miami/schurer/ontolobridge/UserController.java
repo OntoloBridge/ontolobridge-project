@@ -67,6 +67,8 @@ public class UserController extends BaseController {
             email = notLib.formatMessage(email,stringReplace);
             notLib.InsertNotification(JDBCTemplate, "email", user.getEmail(), email, "Ontolobridge - Password Reset Requests");
             userService.saveUser(user);
+        }else{
+            return new OperationResponse("Email Not Found",false,0);
         }
         return new OperationResponse("success",true,0);
     }

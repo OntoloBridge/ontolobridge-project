@@ -155,7 +155,7 @@ public class AuthController extends BaseController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = jwtProvider.generateJwtToken(authentication);
-        return ResponseEntity.ok(new JwtResponse(jwt, authentication.getName()));
+        return ResponseEntity.ok(new JwtResponse(jwt, authentication.getName(),((UserPrinciple) authentication.getPrincipal()).getId()));
     }
 
     @RequestMapping(path="/checkJWTToken", method= RequestMethod.GET, produces={"application/json"})
