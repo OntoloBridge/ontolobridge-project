@@ -62,24 +62,25 @@ public class NotifierService{
 
     @SuppressWarnings("ThrowablePrintedToSystemOut")
     public boolean sendEmailNotification(String email, String subject, String message){
-        if(emailHost.isEmpty())
-            return true;
-        HashMap<String,String> headers = new HashMap<>();
-        headers.put("X-Mailer","Ontolobridge Mailer"); //let people know what sent this message
-        try {
-            final Email emailObject = DefaultEmail.builder()
-                    .from(new InternetAddress(emailHost, "Ontolobridge"))
-                    .to(Lists.newArrayList(new InternetAddress(email)))
-                    .subject(subject)
-                    .body(message)
-                    .customHeaders(headers)
-                    .encoding("UTF-8").build();
-            emailService.send(emailObject);
-        } catch(Exception e){
-            System.out.println("Emailer Exception:");
-            System.out.println(e);
-            return false;
-        }
+
+//        if(emailHost.isEmpty())
+//            return true;
+//        HashMap<String,String> headers = new HashMap<>();
+//        headers.put("X-Mailer","Ontolobridge Mailer"); //let people know what sent this message
+//        try {
+//            final Email emailObject = DefaultEmail.builder()
+//                    .from(new InternetAddress(emailHost, "Ontolobridge"))
+//                    .to(Lists.newArrayList(new InternetAddress(email)))
+//                    .subject(subject)
+//                    .body(message)
+//                    .customHeaders(headers)
+//                    .encoding("UTF-8").build();
+//            emailService.send(emailObject);
+//        } catch(Exception e){
+//            System.out.println("Emailer Exception:");
+//            System.out.println(e);
+//            return false;
+//        }
         return true;
     }
     public void sendGithubNotification(String repo, String title, String Message){

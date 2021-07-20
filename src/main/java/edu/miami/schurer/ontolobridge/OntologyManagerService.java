@@ -222,7 +222,7 @@ public class OntologyManagerService {
 
             //queue notifications
             for (MaintainersObject m : maintainers) {
-                E.put("submitter_email",m.getContact_location());
+                E.put("user_name",m.getContact_location());
                 E.put("submitter","Maintainer");
                 notLib.InsertTermEmail(JDBCTemplate,"/emails/termSubmission.email",E);
                 //NotificationLibrary.InsertNotification(JDBCTemplate, m.getContact_method(), m.getContact_location(), "A new " + E.get("type") + " has been submitted", "New " + E.get("type") + " Forms");
