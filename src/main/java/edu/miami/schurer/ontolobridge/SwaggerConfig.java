@@ -69,10 +69,10 @@ public class SwaggerConfig extends WebMvcConfigurationSupport{
     private ApiInfo apiInfo() {
         return new ApiInfo(
                 "Ontolobridge API",
-                "Some custom description of API.",
+                "Api Used for interacting with Ontolobridge for retrieving and submitting terms and their statuses",
                 "0.1",
                 "Terms of service",
-                new Contact("John Turner", "http://ontolobridge.ccs.miami.edu/", "jpt55@med.miami.edu"),
+                new Contact("Ontolobridge", "http://ontolobridge.ccs.miami.edu/", "info@ontolobridge.org"),
                 "License of API", "API license URL", Collections.emptyList());
     }
 
