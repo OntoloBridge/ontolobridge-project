@@ -87,6 +87,10 @@ public class User{
         return password;
     }
 
+    public boolean getPasswordEncrypted() {
+        return encrypted;
+    }
+
     public void setPassword(String password) {
         this.encrypted = false;
         this.password = password;

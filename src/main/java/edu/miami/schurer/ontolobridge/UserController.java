@@ -86,7 +86,7 @@ public class UserController extends BaseController {
         }
         if(userID != null){
            User user = userService.findByUserId(userID).get();
-           user.setPassword(encoder.encode(password));
+           user.setPassword(password);
            Set<Detail> details = user.getDetails();
            //remove the reset_key to prevent reuse
            details.removeIf(m -> m.getField().equals("reset_key"));
@@ -133,7 +133,7 @@ public class UserController extends BaseController {
         //Set privileged fields
 
         //set email, which requires verification again
-        if(Fields.contains("email")) {
+        if(Fields.contains("email") && !user.getEmail().equals(Data.get(Fields.indexOf("email")))) {
             if(userService.emailExists(Data.get(Fields.indexOf("email")))) {
                 return new ResponseEntity<>(formatResultsWithoutCount("Email is already in use!"),
                         HttpStatus.BAD_REQUEST);
@@ -149,7 +149,7 @@ public class UserController extends BaseController {
             notLib.InsertEmail(JDBCTemplate,"/email/verificationTemplate.email",Data.get(Fields.indexOf("email")),"Verification Email",emailVariables);
 
         }
-        if(Fields.contains("pass1") && Fields.contains("pass2")) {
+        if(Fields.contains("pass1") && Fields.contains("pass2") && !Data.get(Fields.indexOf("pass1")).isEmpty()) {
             String pass1 = Data.get(Fields.indexOf("pass1"));
             String pass2 = Data.get(Fields.indexOf("pass2"));
             if(!pass1.equals(pass2)){
@@ -163,7 +163,7 @@ public class UserController extends BaseController {
 
         }
 
-        if(Fields.contains("name"))
+        if(Fields.contains("name") && ! Data.get(Fields.indexOf("name")).isEmpty())
             user.setName(Data.get(Fields.indexOf("name")));
 
         ArrayList<Detail> details =new ArrayList<>(user.getDetails()); //get details about the user
@@ -173,14 +173,11 @@ public class UserController extends BaseController {
                 continue;
             for (Detail d : details) {
                 if(d.getField().equals(Fields.get(i))) {
-                    if(Data.get(i).isEmpty()) //if empty remove the data from the table
-                        details.remove(d);
-                    d.setValue(Data.get(i));
-                    fieldSet = true; //if we get a hit go to the next
+                    details.remove(d);
                     break;
                 }
             }
-            if(!fieldSet && !Data.get(i).isEmpty()) //if field has not been set that means its a new detail, add detail
+            if(!Data.get(i).isEmpty()) //if field has not been set that means its a new detail, add detail
                 details.add(new Detail(Fields.get(i),Data.get(i)));
         }
         user.setDetails(new HashSet<>(details));

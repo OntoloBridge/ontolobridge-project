@@ -98,10 +98,10 @@ public class OntoloUserDetailsServiceImpl implements OntoloUserDetailsService {
 
     @Transactional
     public User saveUser(User user) {
-        user.setEncPassword(encoder.encode(user.getPassword()));
+        if(!user.getPasswordEncrypted())
+            user.setEncPassword(encoder.encode(user.getPassword()));
         user = userRepository.save(user);
         return user;
-
     }
 
     public boolean emailExists(String email){
