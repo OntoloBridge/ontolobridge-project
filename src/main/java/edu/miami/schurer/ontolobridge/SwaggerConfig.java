@@ -69,9 +69,9 @@ public class SwaggerConfig extends WebMvcConfigurationSupport{
     private ApiInfo apiInfo() {
         return new ApiInfo(
                 "Ontolobridge API",
-                "Api Used for interacting with Ontolobridge for retrieving and submitting terms and their statuses",
+                "“OntoloBridge” is the bridge between the user gap and controlled scientific vocabularies. Ontologies are sets of concepts and categories in a subject area or domain that show their properties and the relations between them. The OntoloBridge system will provide a semi- automated, convenient, rigorous process for researchers around the world to update and extend the BioAssay Ontology.",
                 "0.1",
-                "Terms of service",
+                "https://github.com/OntoloBridge/ontolobridge-project/blob/master/README.md",
                 new Contact("Ontolobridge", "http://ontolobridge.ccs.miami.edu/", "info@ontolobridge.org"),
                 "License of API", "API license URL", Collections.emptyList());
     }
